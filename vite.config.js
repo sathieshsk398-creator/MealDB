@@ -5,4 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  preview: {
+    allowedHosts: true // இது எல்லா ஹோஸ்ட்டையும் அலோவ் பண்ணிடும்!
+  }
 })
