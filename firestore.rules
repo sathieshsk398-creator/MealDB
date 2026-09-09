@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    // Users collection: role and profile
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // User shopping carts for cross-device sync
+    match /carts/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // User favorites
+    match /favorites/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // User address book
+    match /addresses/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Active orders for live tracking
+    match /active_orders/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Custom Dishes: anyone can read the menu; only admins can create/update/delete
+    match /custom_dishes/{dishId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Orders collection: users can read and create their own orders; admins can read & update status
+    match /orders/{orderId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.userEmail == request.auth.token.email ||
+        isAdmin()
+      );
+      allow create: if isSignedIn();
+      allow update: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+  }
+}

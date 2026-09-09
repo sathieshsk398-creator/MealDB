@@ -1,0 +1,8 @@
+{
+  "name": "MealDB",
+  "description": "Swiggy/Zomato style food delivery and meal discovery app with cart, pricing, and checkout.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

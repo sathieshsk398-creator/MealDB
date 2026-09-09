@@ -1,0 +1,256 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role assignment for authorization",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Registered email address"
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name or shop owner name"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "admin"],
+          "description": "Authorization role: user (consumer) or admin (shop owner)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of registration"
+        }
+      },
+      "required": ["email", "role"]
+    },
+    "Cart": {
+      "title": "Cart",
+      "description": "User shopping cart containing meal items with quantities for cross-device sync",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner UID"
+        },
+        "items": {
+          "type": "array",
+          "description": "List of cart items"
+        },
+        "updatedAt": {
+          "type": "number",
+          "description": "Timestamp of last modification"
+        }
+      },
+      "required": ["userId", "items"]
+    },
+    "Favorites": {
+      "title": "Favorites",
+      "description": "User saved favorite dishes list",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner UID"
+        },
+        "items": {
+          "type": "array",
+          "description": "Array of favorite meal objects"
+        },
+        "updatedAt": {
+          "type": "number",
+          "description": "Timestamp of last modification"
+        }
+      },
+      "required": ["userId", "items"]
+    },
+    "AddressBook": {
+      "title": "AddressBook",
+      "description": "Saved delivery addresses and currently active selection",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner UID"
+        },
+        "items": {
+          "type": "array",
+          "description": "List of saved address objects"
+        },
+        "selectedAddressId": {
+          "type": "string",
+          "description": "Currently selected delivery address ID"
+        },
+        "updatedAt": {
+          "type": "number",
+          "description": "Timestamp of last modification"
+        }
+      },
+      "required": ["userId", "items"]
+    },
+    "CustomDish": {
+      "title": "CustomDish",
+      "description": "Admin restaurant menu custom dishes",
+      "type": "object",
+      "properties": {
+        "idMeal": {
+          "type": "string",
+          "description": "Unique meal ID"
+        },
+        "strMeal": {
+          "type": "string",
+          "description": "Dish title"
+        },
+        "price": {
+          "type": "number",
+          "description": "Price in INR"
+        },
+        "strCategory": {
+          "type": "string",
+          "description": "Food category"
+        },
+        "dietType": {
+          "type": "string",
+          "description": "veg or non-veg"
+        },
+        "isVeg": {
+          "type": "boolean",
+          "description": "Vegetarian flag"
+        },
+        "strMealThumb": {
+          "type": "string",
+          "description": "Image URL"
+        },
+        "strInstructions": {
+          "type": "string",
+          "description": "Recipe instructions"
+        },
+        "strArea": {
+          "type": "string",
+          "description": "Cuisine region"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        },
+        "isCustom": {
+          "type": "boolean",
+          "description": "Flag identifying custom created dishes"
+        }
+      },
+      "required": ["idMeal", "strMeal", "price"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Placed food order record",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Order reference code"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner user UID"
+        },
+        "userEmail": {
+          "type": "string",
+          "description": "Customer email"
+        },
+        "userName": {
+          "type": "string",
+          "description": "Customer display name"
+        },
+        "placedAt": {
+          "type": "string",
+          "description": "Formatted time"
+        },
+        "purchaseDate": {
+          "type": "string",
+          "description": "Human readable date string"
+        },
+        "status": {
+          "type": "string",
+          "description": "Order fulfillment status"
+        },
+        "statusIndex": {
+          "type": "number",
+          "description": "Progress step (1 to 3)"
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "Grand total in base currency"
+        },
+        "itemTotal": {
+          "type": "number",
+          "description": "Subtotal"
+        },
+        "deliveryFee": {
+          "type": "number",
+          "description": "Delivery charge"
+        },
+        "totalCount": {
+          "type": "number",
+          "description": "Total quantity of items"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Payment type"
+        },
+        "paymentStatus": {
+          "type": "string",
+          "description": "Paid Online or Paid on Delivery"
+        },
+        "deliveryAddress": {
+          "type": "string",
+          "description": "Selected destination address"
+        },
+        "items": {
+          "type": "array",
+          "description": "Line items in the order"
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Epoch timestamp in milliseconds"
+        }
+      },
+      "required": ["id", "userEmail", "totalAmount", "items"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile document containing email and role (user or admin)"
+    },
+    "/carts/{userId}": {
+      "schema": "Cart",
+      "description": "User shopping cart for real-time multi-device sync"
+    },
+    "/favorites/{userId}": {
+      "schema": "Favorites",
+      "description": "User favorite dishes collection"
+    },
+    "/addresses/{userId}": {
+      "schema": "AddressBook",
+      "description": "User delivery addresses book and default selection"
+    },
+    "/active_orders/{userId}": {
+      "schema": "Order",
+      "description": "User's current active food order with live fulfillment tracking"
+    },
+    "/custom_dishes/{dishId}": {
+      "schema": "CustomDish",
+      "description": "Admin restaurant menu custom dishes"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Customer food orders with live fulfillment tracking"
+    }
+  }
+}
