@@ -107,4 +107,4 @@ MealDB is a fully functional recipe discovery app that demonstrates practical Re
 
 **Sathiesh Kumar M**
 
-View my app in: https://mealdb-app.onrender.com
+View my app in: https://mealdb-app.onrender.com/
