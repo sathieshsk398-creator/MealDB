@@ -1,9 +1,11 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { API_BASE_URL } from "../config.js";
 
 const AuthContext = createContext(null);
 
 const CURRENT_USER_KEY = "mealdb_current_user";
 const USERS_KEY = "mealdb_users";
+const TOKEN_KEY = "mealdb_token";
 
 const DEFAULT_USERS = [
   {
@@ -96,7 +98,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   /**
-   * Register a new consumer or shop owner account in localStorage
+   * Register a new user via Express API (with localStorage fallback)
    */
   const register = async (name, email, password) => {
     const cleanName = (name || "").trim();
@@ -116,6 +118,54 @@ export const AuthProvider = ({ children }) => {
       };
     }
 
+    const isAutoAdmin =
+      cleanEmail.includes("admin") || cleanEmail === "sathieshsk398@gmail.com";
+    const role = isAutoAdmin ? "admin" : "user";
+
+    // 1. Attempt registering via Express backend API
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: cleanName,
+          email: cleanEmail,
+          password: cleanPassword,
+          role,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success && data.token) {
+        const backendUser = {
+          id: data.user._id || data.user.id,
+          uid: data.user._id || data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+          role: data.user.role || role,
+          isAdmin: (data.user.role || role) === "admin",
+          createdAt: data.user.createdAt || new Date().toISOString(),
+        };
+
+        localStorage.setItem(TOKEN_KEY, data.token);
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(backendUser));
+        window.dispatchEvent(new Event("storage"));
+        setCurrentUser(backendUser);
+        return { success: true, user: backendUser, role: backendUser.role };
+      }
+
+      if (response.status === 400 || response.status === 409) {
+        return {
+          success: false,
+          error: data.message || "An account with this email already exists.",
+        };
+      }
+    } catch (networkError) {
+      console.warn("Backend API not reachable at", API_BASE_URL, "- falling back to local storage:", networkError.message);
+    }
+
+    // 2. Fallback to LocalStorage registration
     const users = getStoredUsers();
     const existing = users.find((u) => u.email.toLowerCase() === cleanEmail);
     if (existing) {
@@ -125,11 +175,7 @@ export const AuthProvider = ({ children }) => {
       };
     }
 
-    const isAutoAdmin =
-      cleanEmail.includes("admin") || cleanEmail === "sathieshsk398@gmail.com";
-    const role = isAutoAdmin ? "admin" : "user";
     const newId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-
     const newUser = {
       id: newId,
       uid: newId,
@@ -155,7 +201,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Login with email and password via localStorage
+   * Login with email and password via Express API (with localStorage fallback)
    */
   const login = async (email, password) => {
     const cleanEmail = (email || "").trim().toLowerCase();
@@ -165,10 +211,55 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: "Please enter both email and password." };
     }
 
+    // 1. Attempt logging in via Express backend API
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: cleanEmail,
+          password: cleanPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success && data.token) {
+        const isAutoAdmin =
+          cleanEmail.includes("admin") || cleanEmail === "sathieshsk398@gmail.com";
+        const role = data.user.role || (isAutoAdmin ? "admin" : "user");
+
+        const sessionUser = {
+          id: data.user._id || data.user.id,
+          uid: data.user._id || data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+          role,
+          isAdmin: role === "admin",
+          createdAt: data.user.createdAt || new Date().toISOString(),
+        };
+
+        localStorage.setItem(TOKEN_KEY, data.token);
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(sessionUser));
+        window.dispatchEvent(new Event("storage"));
+        setCurrentUser(sessionUser);
+        return { success: true, user: sessionUser, role };
+      }
+
+      if (response.status === 401 || response.status === 400) {
+        return {
+          success: false,
+          error: data.message || "Invalid email or password.",
+        };
+      }
+    } catch (networkError) {
+      console.warn("Backend API not reachable at", API_BASE_URL, "- falling back to local storage:", networkError.message);
+    }
+
+    // 2. Fallback to LocalStorage & demo credentials
     const users = getStoredUsers();
     let userMatch = users.find((u) => u.email.toLowerCase() === cleanEmail);
 
-    // Fallback search in default demo users
     if (!userMatch) {
       const demoMatch = DEFAULT_USERS.find((u) => u.email.toLowerCase() === cleanEmail);
       if (demoMatch && cleanPassword === "password123") {
@@ -222,6 +313,7 @@ export const AuthProvider = ({ children }) => {
    */
   const logout = async () => {
     try {
+      localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(CURRENT_USER_KEY);
       localStorage.removeItem("currentUser");
       window.dispatchEvent(new Event("storage"));

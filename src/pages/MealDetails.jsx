@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { Star, Clock, Plus, Minus, ShoppingCart, Check, UtensilsCrossed, Heart, Zap } from "lucide-react";
+import { useParams, Link } from "react-router-dom";
+import { Star, Clock, Plus, Minus, ShoppingCart, Check, UtensilsCrossed, Heart } from "lucide-react";
 import { useFavorites } from "../contexts/FavoritesContext";
 import { useCart } from "../contexts/CartContext";
 import { useCurrency } from "../contexts/CurrencyContext";
@@ -11,7 +11,6 @@ import { getMealPrice, getMealRating, getMealDeliveryTime } from "../utils/price
 
 const MealDetails = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [mealData, setMealData] = useState({ meal: null, id: null });
   const [loading, setLoading] = useState(true);
   const [addedNotice, setAddedNotice] = useState(false);
@@ -53,19 +52,6 @@ const MealDetails = () => {
     addToCart(meal, 1);
     setAddedNotice(true);
     setTimeout(() => setAddedNotice(false), 2500);
-  };
-
-  const handleBuyNow = () => {
-    const buyItem = {
-      idMeal: String(meal.idMeal),
-      strMeal: meal.strMeal || "Delicious Meal",
-      strMealThumb: meal.strMealThumb || "",
-      strCategory: meal.strCategory || "Meal",
-      strArea: meal.strArea || "Delicious",
-      price,
-      quantity: quantity > 0 ? quantity : 1,
-    };
-    navigate("/cart", { state: { buyNowItem: buyItem } });
   };
 
   const ingredients = [];
@@ -159,7 +145,6 @@ const MealDetails = () => {
                       onClick={() => updateQuantity(meal.idMeal, -1)}
                       className="px-3 py-2 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
                       title="Decrease quantity"
-                      aria-label="Decrease quantity"
                     >
                       <Minus className="w-4 h-4 stroke-[2.5]" />
                     </button>
@@ -171,7 +156,6 @@ const MealDetails = () => {
                       onClick={() => updateQuantity(meal.idMeal, 1)}
                       className="px-3 py-2 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
                       title="Increase quantity"
-                      aria-label="Increase quantity"
                     >
                       <Plus className="w-4 h-4 stroke-[2.5]" />
                     </button>
@@ -185,17 +169,6 @@ const MealDetails = () => {
                   </Link>
                 </div>
               )}
-
-              {/* Buy Now Button (Instant Single-Dish Checkout) */}
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold px-6 py-3 rounded-xl shadow-md transition-all cursor-pointer text-sm"
-                title="Buy Now (Direct Single-Item Checkout)"
-              >
-                <Zap className="w-4 h-4 fill-current" />
-                <span>Buy Now</span>
-              </button>
 
               <button
                 type="button"

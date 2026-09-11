@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ShoppingBag,
   Plus,
@@ -23,7 +23,6 @@ import {
   Smartphone,
   Wallet,
   Loader2,
-  Zap,
 } from "lucide-react";
 import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -41,87 +40,13 @@ const CartPage = () => {
     removeFromCart,
     clearCart,
     itemTotal,
+    deliveryFee,
+    totalAmount,
     totalCount,
   } = useCart();
   const { currentUser } = useAuth();
   const { formatPrice } = useCurrency();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // Buy Now item (Direct single-dish checkout, bypasses adding other cart items)
-  const locationBuyNow = location.state?.buyNowItem;
-  const [userBuyNowOverride, setUserBuyNowOverride] = useState(undefined);
-
-  const buyNowItem = userBuyNowOverride !== undefined
-    ? userBuyNowOverride
-    : (locationBuyNow || (() => {
-        try {
-          const saved = sessionStorage.getItem("mealdb_buy_now");
-          return saved ? JSON.parse(saved) : null;
-        } catch {
-          return null;
-        }
-      })());
-
-  useEffect(() => {
-    if (locationBuyNow) {
-      try {
-        sessionStorage.setItem("mealdb_buy_now", JSON.stringify(locationBuyNow));
-      } catch (e) {
-        console.error("Failed to store buyNowItem in sessionStorage", e);
-      }
-    }
-  }, [locationBuyNow]);
-
-  const handleSwitchToRegularCart = () => {
-    setUserBuyNowOverride(null);
-    try {
-      sessionStorage.removeItem("mealdb_buy_now");
-    } catch {
-      // ignore
-    }
-  };
-
-  const isBuyNowMode = Boolean(buyNowItem);
-  const displayItems = isBuyNowMode && buyNowItem ? [buyNowItem] : cartItems;
-
-  const handleUpdateQuantity = (idMeal, delta) => {
-    if (isBuyNowMode && buyNowItem) {
-      const newQty = (buyNowItem.quantity || 1) + delta;
-      if (newQty <= 0) {
-        handleSwitchToRegularCart();
-        return;
-      }
-      const updated = { ...buyNowItem, quantity: newQty };
-      setUserBuyNowOverride(updated);
-      try {
-        sessionStorage.setItem("mealdb_buy_now", JSON.stringify(updated));
-      } catch {
-        // ignore
-      }
-    } else {
-      updateQuantity(idMeal, delta);
-    }
-  };
-
-  const handleRemoveItem = (idMeal) => {
-    if (isBuyNowMode) {
-      handleSwitchToRegularCart();
-    } else {
-      removeFromCart(idMeal);
-    }
-  };
-
-  const activeItemTotal = useMemo(() => {
-    if (isBuyNowMode) {
-      return buyNowItem ? (buyNowItem.price || 0) * (buyNowItem.quantity || 1) : 0;
-    }
-    return itemTotal;
-  }, [isBuyNowMode, buyNowItem, itemTotal]);
-
-  const activeDeliveryFee = activeItemTotal > 500 || activeItemTotal === 0 ? 0 : 40;
-  const activeTotalAmount = activeItemTotal + activeDeliveryFee;
-  const activeTotalCount = isBuyNowMode ? (buyNowItem?.quantity || 0) : totalCount;
 
   const userEmail = currentUser?.email?.toLowerCase().trim() || null;
   const activeOrderKey = userEmail ? `active_order_${userEmail}` : "mealdb_active_order";
@@ -179,8 +104,7 @@ const CartPage = () => {
     : "Standard Home Delivery";
 
   const handlePlaceOrder = () => {
-    const orderItems = isBuyNowMode ? (buyNowItem ? [{ ...buyNowItem }] : []) : [...cartItems];
-    if (orderItems.length === 0 || isPlacingOrder) return;
+    if (cartItems.length === 0 || isPlacingOrder) return;
     setIsPlacingOrder(true);
 
     const orderId = `SW-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -189,11 +113,11 @@ const CartPage = () => {
       id: orderId,
       userEmail: currentUser?.email || null,
       userName: currentUser?.name || null,
-      items: orderItems,
-      itemTotal: activeItemTotal,
-      deliveryFee: activeDeliveryFee,
-      totalAmount: activeTotalAmount,
-      totalCount: activeTotalCount,
+      items: [...cartItems],
+      itemTotal,
+      deliveryFee,
+      totalAmount,
+      totalCount,
       placedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       createdAt: now,
       statusIndex: 0,
@@ -206,7 +130,6 @@ const CartPage = () => {
       paymentMethod,
       paymentStatus: paymentMethod === "Cash on Delivery" ? "Pending on Delivery" : "Paid Online (Mock)",
       userId: currentUser?.uid || null,
-      isBuyNowOrder: isBuyNowMode,
     };
 
     // Save active order to localStorage
@@ -218,17 +141,8 @@ const CartPage = () => {
       console.error("Failed to save order:", e);
     }
 
-    if (isBuyNowMode) {
-      try {
-        sessionStorage.removeItem("mealdb_buy_now");
-      } catch {
-        // ignore
-      }
-      setUserBuyNowOverride(null);
-      // Notice: Do NOT clear the regular cart! User only bought this one dish.
-    } else {
-      clearCart();
-    }
+    // Clear cart
+    clearCart();
 
     // Brief transition effect then redirect to OrderTracking.jsx
     setTimeout(() => {
@@ -246,8 +160,8 @@ const CartPage = () => {
     );
   }
 
-  // Empty Cart View (when neither Buy Now item nor regular cart items exist)
-  if (displayItems.length === 0) {
+  // Empty Cart View
+  if (cartItems.length === 0) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
         {existingActiveOrder ? (
@@ -276,25 +190,6 @@ const CartPage = () => {
           </div>
         ) : null}
 
-        {cartItems.length > 0 && (
-          <div className="mb-8 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl max-w-md mx-auto flex items-center justify-between gap-3 text-left shadow-xs">
-            <div>
-              <p className="text-xs font-bold text-emerald-900">
-                You have {cartItems.length} {cartItems.length === 1 ? "dish" : "dishes"} saved in your regular cart.
-              </p>
-              <p className="text-[11px] text-emerald-700">Would you like to continue with your full cart?</p>
-            </div>
-            <button
-              type="button"
-              onClick={handleSwitchToRegularCart}
-              className="shrink-0 inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition shadow-xs cursor-pointer"
-            >
-              <ShoppingBag className="w-3.5 h-3.5" />
-              <span>Full Cart</span>
-            </button>
-          </div>
-        )}
-
         <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600 shadow-inner">
           <ShoppingBag className="w-12 h-12 stroke-[1.5]" />
         </div>
@@ -320,64 +215,17 @@ const CartPage = () => {
       {/* Page Header */}
       <div className="mb-6 flex items-center justify-between pb-4 border-b border-gray-100">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2.5">
-            <span>{isBuyNowMode ? "Instant Checkout" : "Order Checkout"}</span>
-            {isBuyNowMode && (
-              <span className="text-xs font-bold bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full border border-amber-300 inline-flex items-center gap-1 shadow-2xs">
-                <Zap className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                <span>Buy Now</span>
-              </span>
-            )}
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+            Order Checkout
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            {isBuyNowMode
-              ? "Checking out directly with this selected dish only"
-              : "Review your dishes and place your delivery order"}
+            Review your dishes and place your delivery order
           </p>
         </div>
-        <span className={`text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-full border ${
-          isBuyNowMode
-            ? "text-amber-900 bg-amber-50 border-amber-200"
-            : "text-emerald-800 bg-emerald-50 border-emerald-200"
-        }`}>
-          {isBuyNowMode
-            ? `${activeTotalCount} ${activeTotalCount === 1 ? "dish" : "dishes"} (Direct)`
-            : `${totalCount} ${totalCount === 1 ? "item" : "items"} in cart`}
+        <span className="text-xs sm:text-sm font-semibold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+          {totalCount} {totalCount === 1 ? "item" : "items"} in cart
         </span>
       </div>
-
-      {/* Buy Now Active Banner */}
-      {isBuyNowMode && buyNowItem && (
-        <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-amber-50/90 border border-amber-200 text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-          <div className="flex items-center gap-3">
-            <span className="p-2.5 rounded-xl bg-amber-500 text-white font-bold flex items-center justify-center shrink-0 shadow-xs">
-              <Zap className="w-5 h-5 fill-current" />
-            </span>
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-extrabold text-amber-950">
-                  Instant Single-Dish Checkout Active
-                </p>
-                <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  Only This Dish
-                </span>
-              </div>
-              <p className="text-xs text-amber-800 mt-0.5">
-                Buying only <strong className="font-bold text-amber-950">{buyNowItem.strMeal}</strong>. Dishes already added to your regular cart are not included in this order.
-              </p>
-            </div>
-          </div>
-          {cartItems.length > 0 && (
-            <button
-              type="button"
-              onClick={handleSwitchToRegularCart}
-              className="text-xs font-bold text-amber-950 hover:bg-amber-100 bg-white border border-amber-300 px-3.5 py-2 rounded-xl transition cursor-pointer whitespace-nowrap self-start sm:self-auto shadow-2xs"
-            >
-              Switch to Full Cart ({totalCount} {totalCount === 1 ? "dish" : "dishes"})
-            </button>
-          )}
-        </div>
-      )}
 
       <div className="grid lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Delivery Address & Cart Items */}
@@ -562,41 +410,21 @@ const CartPage = () => {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
               <div className="flex items-center gap-2">
-                {isBuyNowMode ? (
-                  <Zap className="w-4 h-4 text-amber-600 fill-amber-600" />
-                ) : (
-                  <UtensilsCrossed className="w-4 h-4 text-emerald-700" />
-                )}
-                <h2 className="font-bold text-gray-900 text-base">
-                  {isBuyNowMode ? "Buy Now Dish" : "Your Selected Dishes"}
-                </h2>
-                <span className="text-xs text-gray-400 font-semibold">
-                  ({activeTotalCount})
-                </span>
+                <UtensilsCrossed className="w-4 h-4 text-emerald-700" />
+                <h2 className="font-bold text-gray-900 text-base">Your Selected Dishes</h2>
               </div>
-              {isBuyNowMode ? (
-                cartItems.length > 0 && (
-                  <button
-                    onClick={handleSwitchToRegularCart}
-                    className="text-xs font-semibold text-amber-800 hover:text-amber-950 underline underline-offset-2 cursor-pointer transition-colors"
-                  >
-                    View Regular Cart ({totalCount})
-                  </button>
-                )
-              ) : (
-                <button
-                  onClick={clearCart}
-                  className="text-xs font-semibold text-red-600 hover:text-red-700 flex items-center gap-1 cursor-pointer transition-colors"
-                  title="Clear all items"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Clear Cart</span>
-                </button>
-              )}
+              <button
+                onClick={clearCart}
+                className="text-xs font-semibold text-red-600 hover:text-red-700 flex items-center gap-1 cursor-pointer transition-colors"
+                title="Clear all items"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Clear Cart</span>
+              </button>
             </div>
 
             <div className="divide-y divide-gray-100">
-              {displayItems.map((item) => {
+              {cartItems.map((item) => {
                 const itemSubtotal = (item.price || 0) * item.quantity;
                 return (
                   <div
@@ -632,8 +460,7 @@ const CartPage = () => {
                     <div className="flex items-center gap-3">
                       <div className="inline-flex items-center bg-white border border-emerald-600 text-emerald-800 rounded-xl overflow-hidden shadow-xs">
                         <button
-                          type="button"
-                          onClick={() => handleUpdateQuantity(item.idMeal, -1)}
+                          onClick={() => updateQuantity(item.idMeal, -1)}
                           className="px-2.5 py-1.5 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
                           aria-label="Decrease quantity"
                         >
@@ -643,8 +470,7 @@ const CartPage = () => {
                           {item.quantity}
                         </span>
                         <button
-                          type="button"
-                          onClick={() => handleUpdateQuantity(item.idMeal, 1)}
+                          onClick={() => updateQuantity(item.idMeal, 1)}
                           className="px-2.5 py-1.5 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
                           aria-label="Increase quantity"
                         >
@@ -661,9 +487,9 @@ const CartPage = () => {
 
                       {/* Delete icon */}
                       <button
-                        onClick={() => handleRemoveItem(item.idMeal)}
+                        onClick={() => removeFromCart(item.idMeal)}
                         className="text-gray-400 hover:text-red-600 p-1.5 transition-colors cursor-pointer"
-                        title={isBuyNowMode ? "Cancel Buy Now" : "Remove item"}
+                        title="Remove item"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -904,8 +730,8 @@ const CartPage = () => {
             {/* Bill Breakdown */}
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between text-gray-600">
-                <span>Item Total ({activeTotalCount} {activeTotalCount === 1 ? "item" : "items"})</span>
-                <span className="font-semibold text-gray-900">{formatPrice(activeItemTotal)}</span>
+                <span>Item Total ({totalCount} items)</span>
+                <span className="font-semibold text-gray-900">{formatPrice(itemTotal)}</span>
               </div>
 
               <div className="flex items-center justify-between text-gray-600">
@@ -916,7 +742,7 @@ const CartPage = () => {
                   </span>
                 </div>
                 <span className="font-semibold text-gray-900">
-                  {formatPrice(activeDeliveryFee)}
+                  {formatPrice(deliveryFee)}
                 </span>
               </div>
 
@@ -942,12 +768,10 @@ const CartPage = () => {
                     <span className="text-base font-extrabold text-gray-900 tracking-tight">
                       TO PAY
                     </span>
-                    <p className="text-[11px] text-gray-400">
-                      {isBuyNowMode ? "Single dish instant order" : "Inclusive of all applicable fees"}
-                    </p>
+                    <p className="text-[11px] text-gray-400">Inclusive of all applicable fees</p>
                   </div>
                   <span className="text-2xl font-black text-emerald-800 tracking-tight">
-                    {formatPrice(activeTotalAmount)}
+                    {formatPrice(totalAmount)}
                   </span>
                 </div>
               </div>
@@ -982,32 +806,20 @@ const CartPage = () => {
             {/* Place Order CTA Button */}
             <button
               onClick={handlePlaceOrder}
-              disabled={isPlacingOrder || activeTotalCount === 0}
-              className={`mt-4 w-full active:scale-[0.98] disabled:opacity-60 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all flex items-center justify-between cursor-pointer text-base ${
-                isBuyNowMode
-                  ? "bg-amber-500 hover:bg-amber-600 shadow-amber-600/20"
-                  : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-700/20"
-              }`}
+              disabled={isPlacingOrder || totalCount === 0}
+              className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-60 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-emerald-700/20 transition-all flex items-center justify-between cursor-pointer text-base"
             >
               <div className="flex flex-col text-left">
-                <span className="text-xs opacity-90 font-medium">Total: {formatPrice(activeTotalAmount)}</span>
-                <span className="tracking-wide flex items-center gap-1.5">
+                <span className="text-xs opacity-90 font-medium">Total: {formatPrice(totalAmount)}</span>
+                <span className="tracking-wide">
                   {isPlacingOrder
                     ? "Placing Order..."
-                    : isBuyNowMode
-                    ? paymentMethod === "Cash on Delivery"
-                      ? "Buy Now (Pay on Delivery)"
-                      : `Buy Now • Pay ${formatPrice(activeTotalAmount)}`
                     : paymentMethod === "Cash on Delivery"
                     ? "Place Order (Pay on Delivery)"
-                    : `Pay ${formatPrice(activeTotalAmount)} & Place Order`}
+                    : `Pay ${formatPrice(totalAmount)} & Place Order`}
                 </span>
               </div>
-              {isBuyNowMode ? (
-                <Zap className="w-5 h-5 fill-current" />
-              ) : (
-                <ArrowRight className="w-5 h-5 stroke-[2.5]" />
-              )}
+              <ArrowRight className="w-5 h-5 stroke-[2.5]" />
             </button>
 
             <div className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-500">

@@ -1,5 +1,5 @@
-import { Link, useNavigate } from "react-router-dom";
-import { Star, Clock, Plus, Minus, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Star, Clock, Plus, Minus } from "lucide-react";
 import FavoriteButton from "./FavoriteButton";
 import { useFavorites } from "../contexts/FavoritesContext";
 import { useCart } from "../contexts/CartContext";
@@ -7,7 +7,6 @@ import { useCurrency } from "../contexts/CurrencyContext";
 import { getMealPrice, getMealRating, getMealDeliveryTime } from "../utils/price";
 
 const MealCard = ({ meal }) => {
-  const navigate = useNavigate();
   const { toggle, isFavorite } = useFavorites();
   const { addToCart, updateQuantity, getItemQuantity } = useCart();
   const { formatPrice } = useCurrency();
@@ -33,21 +32,6 @@ const MealCard = ({ meal }) => {
     e.preventDefault();
     e.stopPropagation();
     updateQuantity(meal.idMeal, 1);
-  };
-
-  const handleBuyNow = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const buyItem = {
-      idMeal: String(meal.idMeal),
-      strMeal: meal.strMeal || "Delicious Meal",
-      strMealThumb: meal.strMealThumb || "",
-      strCategory: meal.strCategory || "Meal",
-      strArea: meal.strArea || "Delicious",
-      price,
-      quantity: quantity > 0 ? quantity : 1,
-    };
-    navigate("/cart", { state: { buyNowItem: buyItem } });
   };
 
   return (
@@ -128,53 +112,38 @@ const MealCard = ({ meal }) => {
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
-            {quantity === 0 ? (
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                className="inline-flex items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-xl shadow-xs transition-all duration-200 cursor-pointer"
-                title="Add to Cart"
-              >
-                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Add</span>
-              </button>
-            ) : (
-              <div className="inline-flex items-center bg-emerald-50 border border-emerald-600 text-emerald-800 rounded-xl overflow-hidden shadow-xs">
-                <button
-                  type="button"
-                  onClick={handleDecrease}
-                  className="px-2 py-1.5 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
-                  title="Decrease quantity"
-                  aria-label="Decrease quantity"
-                >
-                  <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
-                </button>
-                <span className="px-1.5 text-xs font-bold min-w-[18px] text-center">
-                  {quantity}
-                </span>
-                <button
-                  type="button"
-                  onClick={handleIncrease}
-                  className="px-2 py-1.5 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
-                  title="Increase quantity"
-                  aria-label="Increase quantity"
-                >
-                  <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                </button>
-              </div>
-            )}
-
+          {quantity === 0 ? (
             <button
               type="button"
-              onClick={handleBuyNow}
-              className="inline-flex items-center justify-center gap-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-xl shadow-xs transition-all duration-200 cursor-pointer"
-              title="Buy Now (Instant single-item checkout)"
+              onClick={handleAddToCart}
+              className="inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold uppercase tracking-wider px-3.5 py-2 rounded-xl shadow-sm transition-all duration-200 cursor-pointer"
             >
-              <Zap className="w-3 h-3 fill-current" />
-              <span>Buy Now</span>
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Add</span>
             </button>
-          </div>
+          ) : (
+            <div className="inline-flex items-center bg-emerald-50 border border-emerald-600 text-emerald-800 rounded-xl overflow-hidden shadow-sm">
+              <button
+                type="button"
+                onClick={handleDecrease}
+                className="px-2.5 py-1.5 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
+                title="Decrease quantity"
+              >
+                <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
+              </button>
+              <span className="px-2 text-xs font-bold min-w-[20px] text-center">
+                {quantity}
+              </span>
+              <button
+                type="button"
+                onClick={handleIncrease}
+                className="px-2.5 py-1.5 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
+                title="Increase quantity"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

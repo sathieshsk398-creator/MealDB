@@ -1,130 +1,68 @@
-import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { getMealPrice } from "../utils/price";
+import { API_BASE_URL } from "../config.js";
 
 const CartContext = createContext(null);
 
-const GUEST_CART_KEY = "mealdb_cart";
-
 const getCartStorageKey = (user) => {
-  if (user && user.email) {
-    return `cart_${user.email.toLowerCase().trim()}`;
-  }
-  return GUEST_CART_KEY;
-};
-
-/**
- * Deduplicates cart items by idMeal, ensuring single unique entries with clean string IDs
- */
-const deduplicateCartItems = (items) => {
-  if (!Array.isArray(items)) return [];
-  const map = new Map();
-
-  for (const item of items) {
-    if (!item || !item.idMeal) continue;
-    const id = String(item.idMeal);
-    const qty = Math.max(1, Math.round(Number(item.quantity) || 1));
-    const price = typeof item.price === "number" ? item.price : getMealPrice(item);
-
-    if (map.has(id)) {
-      const existing = map.get(id);
-      existing.quantity = Math.max(1, (existing.quantity || 1) + qty);
-    } else {
-      map.set(id, {
-        idMeal: id,
-        strMeal: item.strMeal || "Delicious Meal",
-        strMealThumb: item.strMealThumb || "",
-        strCategory: item.strCategory || "Meal",
-        strArea: item.strArea || "Delicious",
-        price,
-        quantity: qty,
-      });
-    }
-  }
-
-  return Array.from(map.values());
+  if (!user || !user.email) return null;
+  return `cart_${user.email.toLowerCase().trim()}`;
 };
 
 const loadCartFromStorage = (user) => {
+  const key = getCartStorageKey(user);
+  if (!key) return [];
   try {
-    const userKey = user && user.email ? `cart_${user.email.toLowerCase().trim()}` : null;
-    const guestRaw = localStorage.getItem(GUEST_CART_KEY);
-    let guestItems = [];
-    if (guestRaw) {
-      try {
-        const parsed = JSON.parse(guestRaw);
-        if (Array.isArray(parsed)) guestItems = parsed;
-      } catch (e) {
-        console.error("Failed to parse guest cart:", e);
-      }
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
     }
-
-    if (userKey) {
-      const userRaw = localStorage.getItem(userKey);
-      let userItems = [];
-      if (userRaw) {
-        try {
-          const parsed = JSON.parse(userRaw);
-          if (Array.isArray(parsed)) userItems = parsed;
-        } catch (e) {
-          console.error("Failed to parse user cart:", e);
-        }
-      }
-
-      if (guestItems.length > 0) {
-        const combined = deduplicateCartItems([...userItems, ...guestItems]);
-        localStorage.setItem(userKey, JSON.stringify(combined));
-        localStorage.removeItem(GUEST_CART_KEY);
-        return combined;
-      }
-
-      return deduplicateCartItems(userItems);
-    }
-
-    return deduplicateCartItems(guestItems);
-  } catch (err) {
-    console.error("Failed to read cart from localStorage:", err);
-    return [];
+  } catch (e) {
+    console.error("Failed to read cart from localStorage:", e);
   }
+  return [];
 };
 
 export const CartProvider = ({ children }) => {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const [cartItems, setCartItems] = useState(() => loadCartFromStorage(currentUser));
   const cartLoading = false;
-  const isInitialMount = useRef(true);
 
-  // Sync state when active user changes (login / logout)
+  // Adjust state when active user changes
   const [prevEmail, setPrevEmail] = useState(currentUser?.email);
   if (currentUser?.email !== prevEmail) {
     setPrevEmail(currentUser?.email);
     setCartItems(loadCartFromStorage(currentUser));
   }
 
-  // Persist cartItems changes to localStorage cleanly without side effects inside updaters
+  // Persist cart to localStorage whenever cartItems or currentUser changes
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
     const key = getCartStorageKey(currentUser);
+    if (!key) return;
     try {
       localStorage.setItem(key, JSON.stringify(cartItems));
-      // Keep guest key updated as fallback if guest
-      if (!currentUser) {
-        localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cartItems));
-      }
     } catch (err) {
-      console.error("Error writing cart to storage:", err);
+      console.error("Error saving cart to localStorage:", err);
     }
   }, [cartItems, currentUser]);
 
-  // Sync across tabs via window storage events (only reacts to external storage changes)
+  // Sync across tabs via window storage events (only for changes from other tabs)
   useEffect(() => {
     const handleStorage = (e) => {
       const currentKey = getCartStorageKey(currentUser);
-      if (e.key === currentKey || e.key === GUEST_CART_KEY) {
-        setCartItems(loadCartFromStorage(currentUser));
+      if (e.key === currentKey && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            setCartItems(parsed);
+          }
+        } catch {
+          // ignore parsing error
+        }
       }
     };
 
@@ -132,30 +70,68 @@ export const CartProvider = ({ children }) => {
     return () => window.removeEventListener("storage", handleStorage);
   }, [currentUser]);
 
+  // Initial fetch from backend if user has a valid JWT token
+  useEffect(() => {
+    const token = localStorage.getItem("mealdb_token");
+    if (!token || !currentUser) return;
+
+    let isMounted = true;
+    fetch(`${API_BASE_URL}/api/cart`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted && data && data.cart && Array.isArray(data.cart.items)) {
+          // Only update if backend has items and local cart was empty
+          setCartItems((local) => {
+            if (local.length === 0 && data.cart.items.length > 0) {
+              return data.cart.items;
+            }
+            return local;
+          });
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser]);
+
   /**
    * Add item to cart.
-   * Guaranteed single-count addition with exact string ID matching.
+   * If user is not logged in, redirects to /login page preserving the current URL.
    */
   const addToCart = useCallback(
     (meal, quantity = 1) => {
-      if (!meal || !meal.idMeal) return false;
-      const cleanId = String(meal.idMeal);
-      const addQty = Math.max(1, Math.round(Number(quantity) || 1));
-      const price = typeof meal.price === "number" ? meal.price : getMealPrice(meal);
+      if (!currentUser) {
+        navigate("/login", {
+          state: {
+            from: window.location.pathname + window.location.search,
+            message: "Please sign in to add meals to your cart.",
+          },
+        });
+        return false;
+      }
+
+      if (!meal) return false;
+      const price = getMealPrice(meal);
+      const addQty = Math.max(1, Number(quantity) || 1);
 
       setCartItems((prev) => {
-        const existingIndex = prev.findIndex((item) => String(item.idMeal) === cleanId);
-        if (existingIndex > -1) {
-          return prev.map((item, idx) =>
-            idx === existingIndex
-              ? { ...item, quantity: (item.quantity || 1) + addQty }
+        const mealIdStr = String(meal.idMeal);
+        const existing = prev.find((item) => String(item.idMeal) === mealIdStr);
+        if (existing) {
+          return prev.map((item) =>
+            String(item.idMeal) === mealIdStr
+              ? { ...item, quantity: item.quantity + addQty }
               : item
           );
         }
         return [
           ...prev,
           {
-            idMeal: cleanId,
+            idMeal: mealIdStr,
             strMeal: meal.strMeal || "Delicious Meal",
             strMealThumb: meal.strMealThumb || "",
             strCategory: meal.strCategory || "Meal",
@@ -166,9 +142,28 @@ export const CartProvider = ({ children }) => {
         ];
       });
 
+      // Synchronize with Express backend
+      const token = localStorage.getItem("mealdb_token");
+      if (token) {
+        fetch(`${API_BASE_URL}/api/cart`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            idMeal: String(meal.idMeal),
+            strMeal: meal.strMeal || "Delicious Meal",
+            strMealThumb: meal.strMealThumb || "",
+            price,
+            quantity: addQty,
+          }),
+        }).catch(() => {});
+      }
+
       return true;
     },
-    []
+    [currentUser, navigate]
   );
 
   /**
@@ -176,87 +171,110 @@ export const CartProvider = ({ children }) => {
    */
   const addItemsToCart = useCallback(
     (items = []) => {
+      if (!currentUser) {
+        navigate("/login", {
+          state: {
+            from: window.location.pathname + window.location.search,
+            message: "Please sign in to add meals to your cart.",
+          },
+        });
+        return false;
+      }
+
       if (!items || items.length === 0) return false;
 
       setCartItems((prev) => {
-        const copy = [...prev];
+        const updated = [...prev];
         items.forEach((item) => {
           if (!item || !item.idMeal) return;
-          const cleanId = String(item.idMeal);
           const price = typeof item.price === "number" ? item.price : getMealPrice(item);
-          const qty = Math.max(1, Math.round(Number(item.quantity) || 1));
-          const existingIndex = copy.findIndex((i) => String(i.idMeal) === cleanId);
+          const quantity = typeof item.quantity === "number" && item.quantity > 0 ? item.quantity : 1;
+          const existingIndex = updated.findIndex((i) => String(i.idMeal) === String(item.idMeal));
 
           if (existingIndex > -1) {
-            copy[existingIndex] = {
-              ...copy[existingIndex],
-              quantity: (copy[existingIndex].quantity || 1) + qty,
+            updated[existingIndex] = {
+              ...updated[existingIndex],
+              quantity: updated[existingIndex].quantity + quantity,
             };
           } else {
-            copy.push({
-              idMeal: cleanId,
+            updated.push({
+              idMeal: String(item.idMeal),
               strMeal: item.strMeal || "Delicious Meal",
               strMealThumb: item.strMealThumb || "",
               strCategory: item.strCategory || "Meal",
               strArea: item.strArea || "Delicious",
               price,
-              quantity: qty,
+              quantity,
             });
           }
         });
-        return deduplicateCartItems(copy);
+        return updated;
       });
 
       return true;
     },
+    [currentUser, navigate]
+  );
+
+  const updateQuantity = useCallback(
+    (idMeal, delta) => {
+      if (!currentUser) {
+        navigate("/login", {
+          state: {
+            from: window.location.pathname + window.location.search,
+            message: "Please sign in to manage your cart.",
+          },
+        });
+        return;
+      }
+
+      const mealIdStr = String(idMeal);
+      setCartItems((prev) =>
+        prev
+          .map((item) => {
+            if (String(item.idMeal) === mealIdStr) {
+              const newQty = item.quantity + delta;
+              return newQty > 0 ? { ...item, quantity: newQty } : null;
+            }
+            return item;
+          })
+          .filter(Boolean)
+      );
+    },
+    [currentUser, navigate]
+  );
+
+  const removeFromCart = useCallback(
+    (idMeal) => {
+      const mealIdStr = String(idMeal);
+      setCartItems((prev) => prev.filter((item) => String(item.idMeal) !== mealIdStr));
+
+      const token = localStorage.getItem("mealdb_token");
+      if (token) {
+        fetch(`${API_BASE_URL}/api/cart/${mealIdStr}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => {});
+      }
+    },
     []
   );
 
-  const updateQuantity = useCallback((idMeal, delta) => {
-    if (!idMeal) return;
-    const cleanId = String(idMeal);
-    const change = Number(delta) || 0;
-    if (change === 0) return;
-
-    setCartItems((prev) => {
-      const existingIndex = prev.findIndex((item) => String(item.idMeal) === cleanId);
-      if (existingIndex === -1) return prev;
-
-      const targetItem = prev[existingIndex];
-      const newQty = (targetItem.quantity || 1) + change;
-
-      if (newQty <= 0) {
-        return prev.filter((_, idx) => idx !== existingIndex);
-      }
-
-      return prev.map((item, idx) =>
-        idx === existingIndex ? { ...item, quantity: newQty } : item
-      );
-    });
-  }, []);
-
-  const removeFromCart = useCallback((idMeal) => {
-    if (!idMeal) return;
-    const cleanId = String(idMeal);
-    setCartItems((prev) => prev.filter((item) => String(item.idMeal) !== cleanId));
-  }, []);
-
   const clearCart = useCallback(() => {
     setCartItems([]);
-    const key = getCartStorageKey(currentUser);
-    try {
-      localStorage.removeItem(key);
-      localStorage.removeItem(GUEST_CART_KEY);
-    } catch (err) {
-      console.error("Failed to clear cart from localStorage:", err);
+
+    const token = localStorage.getItem("mealdb_token");
+    if (token) {
+      fetch(`${API_BASE_URL}/api/cart`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {});
     }
-  }, [currentUser]);
+  }, []);
 
   const getItemQuantity = useCallback(
     (idMeal) => {
-      if (!idMeal) return 0;
-      const cleanId = String(idMeal);
-      const item = cartItems.find((i) => String(i.idMeal) === cleanId);
+      const item = cartItems.find((i) => i.idMeal === idMeal);
       return item ? item.quantity : 0;
     },
     [cartItems]

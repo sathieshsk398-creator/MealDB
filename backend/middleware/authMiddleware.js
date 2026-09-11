@@ -2,9 +2,9 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
 /**
- * Protect routes - Verifies Bearer JWT Token in Authorization header
+ * authMiddleware / protect - Verifies Bearer JWT Token in Authorization header
  */
-export const protect = async (req, res, next) => {
+export const authMiddleware = async (req, res, next) => {
   let token;
 
   const authHeader = req.headers.authorization;
@@ -44,6 +44,9 @@ export const protect = async (req, res, next) => {
   }
 };
 
+// Aliases for compatibility
+export const protect = authMiddleware;
+
 /**
  * Admin authorization check
  */
@@ -58,4 +61,4 @@ export const adminOnly = (req, res, next) => {
   }
 };
 
-export default protect;
+export default authMiddleware;

@@ -4,7 +4,7 @@ import {
   loginUser,
   getUserProfile,
 } from '../controllers/authController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -24,6 +24,6 @@ router.post('/login', loginUser);
  * @route   GET /api/auth/profile
  * @desc    Get current user profile (protected)
  */
-router.get('/profile', protect, getUserProfile);
+router.get('/profile', authMiddleware, getUserProfile);
 
 export default router;

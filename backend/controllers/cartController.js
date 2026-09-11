@@ -101,7 +101,14 @@ export const addToCart = async (req, res) => {
  */
 export const removeFromCart = async (req, res) => {
   try {
-    const { idMeal } = req.params;
+    const idMeal = req.params.idMeal || req.body?.idMeal || req.body?.mealId || req.query?.idMeal;
+
+    if (!idMeal) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide idMeal of the item to remove.',
+      });
+    }
 
     const cart = await Cart.findOne({ user: req.user._id });
 
