@@ -15,7 +15,7 @@
  * 5. Open http://<laptop-ip>:3000 on your mobile browser.
  */
 
-export const API_BASE_URL = 'http://localhost:5000';
+export const API_BASE_URL = "https://mealdb-app.onrender.com";
 
 export default {
   API_BASE_URL,
