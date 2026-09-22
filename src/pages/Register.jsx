@@ -73,19 +73,24 @@ const Register = () => {
   return (
     <div className="min-h-[calc(100vh-80px)] flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <Link to="/" className="inline-flex items-center gap-2 group mb-4">
-          <div className="w-10 h-10 bg-emerald-600 group-hover:bg-emerald-700 text-white rounded-2xl flex items-center justify-center shadow-md transition-colors">
-            <UtensilsCrossed className="w-5 h-5 stroke-[2.5]" />
+        <Link to="/" className="inline-flex items-center gap-2.5 group mb-4">
+          <div className="w-11 h-11 bg-emerald-600 group-hover:bg-emerald-700 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-600/30 transition-transform duration-300 group-hover:scale-105">
+            <UtensilsCrossed className="w-6 h-6 stroke-[2.5]" />
           </div>
-          <span className="text-2xl font-black tracking-tight text-gray-900">
-            Meal<span className="text-emerald-600">DB</span>
-          </span>
+          <div className="text-left">
+            <span className="text-2xl font-black tracking-tight text-slate-900 block leading-none">
+              Dish<span className="text-emerald-600">ly</span>
+            </span>
+            <span className="text-[10px] text-emerald-600 font-extrabold uppercase tracking-widest block mt-0.5">
+              Food Delivery
+            </span>
+          </div>
         </Link>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+        <h2 className="text-3xl font-black text-slate-900 tracking-tight">
           Create an account
         </h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Your orders, favorites, and cart are synced securely in Cloud Firestore
+        <p className="mt-1 text-sm text-slate-500 font-medium">
+          Your orders, favorites, and cart are saved and ready anytime
         </p>
       </div>
 

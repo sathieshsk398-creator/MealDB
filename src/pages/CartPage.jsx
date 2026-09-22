@@ -335,24 +335,24 @@ const CartPage = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
       {/* Buy Now Notification Banner */}
       {isSingleBuyNow && (
-        <div className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
-              <Zap className="w-5 h-5 fill-white stroke-white" />
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold shadow-md shadow-amber-500/30 shrink-0">
+              <Zap className="w-6 h-6 fill-white stroke-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-extrabold text-amber-950">
+                <h3 className="text-base font-black text-amber-950">
                   Instant Buy Now Checkout
                 </h3>
-                <span className="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+                <span className="text-[10px] bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">
                   Only This Dish
                 </span>
               </div>
-              <p className="text-xs text-amber-800 mt-0.5">
+              <p className="text-xs text-amber-800 mt-0.5 font-medium">
                 Only this selected dish is being ordered now. {totalCount > 0 ? (
                   <span>Your regular cart ({totalCount} items) will remain untouched and safe.</span>
                 ) : (
@@ -364,7 +364,7 @@ const CartPage = () => {
           {totalCount > 0 && (
             <Link
               to="/cart"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-white hover:bg-emerald-50 border border-emerald-300 px-3.5 py-2 rounded-xl transition shadow-2xs whitespace-nowrap self-start sm:self-center cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-800 bg-white hover:bg-emerald-50 border border-emerald-300 px-4 py-2.5 rounded-xl transition shadow-xs whitespace-nowrap self-start sm:self-center cursor-pointer"
             >
               <ShoppingCart className="w-3.5 h-3.5 text-emerald-600" />
               <span>Switch to Full Cart ({totalCount})</span>
@@ -373,20 +373,20 @@ const CartPage = () => {
         </div>
       )}
 
-      {/* Page Header */}
-      <div className="mb-6 flex items-center justify-between pb-4 border-b border-gray-100">
+      {/* Page Header Card */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
-            {isSingleBuyNow && <Zap className="w-6 h-6 text-amber-500 fill-amber-500" />}
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+            {isSingleBuyNow && <Zap className="w-8 h-8 text-amber-500 fill-amber-500" />}
             <span>{isSingleBuyNow ? "Instant Order Checkout" : "Order Checkout"}</span>
           </h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
             {isSingleBuyNow
               ? "Review your single dish and place your delivery order"
               : "Review your dishes and place your delivery order"}
           </p>
         </div>
-        <span className={`text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-full border ${
+        <span className={`text-xs sm:text-sm font-black px-4 py-2 rounded-full border ${
           isSingleBuyNow
             ? "text-amber-800 bg-amber-50 border-amber-200"
             : "text-emerald-800 bg-emerald-50 border-emerald-200"

@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { fetchMealsByCategory } from "../api/mealdb";
 import LoadingSpinner from "../components/LoadingSpinner";
 import MealCard from "../components/MealCard";
-import { ArrowLeft, Utensils } from "lucide-react";
+import { ArrowLeft, Utensils, Sparkles } from "lucide-react";
 
 const CategoryMeals = () => {
   const { category } = useParams();
@@ -21,7 +21,7 @@ const CategoryMeals = () => {
           }
         })
         .catch((err) => {
-          console.log(err);
+          console.error(err);
           if (!ignore) {
             setLoading(false);
           }
@@ -47,38 +47,42 @@ const CategoryMeals = () => {
   const meals = data.meals;
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
-      {/* Top Breadcrumb & Heading */}
-      <div className="mb-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
+      {/* Top Breadcrumb & Heading Banner */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-xs">
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-emerald-700 hover:text-emerald-800 mb-3 transition-colors"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-600 hover:text-emerald-700 mb-4 transition-colors group"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span>Back to All Categories</span>
         </Link>
-        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 pb-4 border-b border-gray-100">
+        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold capitalize text-gray-900 tracking-tight flex items-center gap-2">
-              <span>{category} Dishes</span>
+            <div className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-600 uppercase tracking-widest mb-1.5">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Category Selection</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black capitalize text-slate-900 tracking-tight">
+              {category} Menu
             </h1>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1">
-              Popular and chef-crafted {category} selections delivered fresh
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              Authentic and chef-crafted {category} selections delivered hot to your doorstep
             </p>
           </div>
-          <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-3 py-1 rounded-full w-fit">
+          <span className="text-xs font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-100 px-4 py-1.5 rounded-full w-fit">
             {meals.length} {meals.length === 1 ? "dish" : "dishes"} available
           </span>
         </div>
       </div>
 
       {meals.length === 0 ? (
-        <div className="text-center py-16">
-          <Utensils className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-600 font-medium">No meals found in this category.</p>
+        <div className="text-center py-20 bg-white rounded-3xl border border-slate-100">
+          <Utensils className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+          <p className="text-slate-600 font-semibold">No meals found in this category.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-7">
           {meals.map((meal) => (
             <MealCard
               key={meal.idMeal}

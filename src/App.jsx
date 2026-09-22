@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import Header from "./components/Header";
+import Footer from "./components/Footer";
 import SplashScreen from "./components/SplashScreen";
 import Home from "./pages/Home";
 import CategoryMeals from "./pages/CategoryMeals";
@@ -111,6 +112,7 @@ const AppContent = () => {
           />
         </Routes>
       </main>
+      <Footer />
     </div>
   );
 };

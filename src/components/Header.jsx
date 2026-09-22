@@ -82,19 +82,19 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-xs">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+    <header className="bg-white/95 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40 shadow-xs">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
         {/* Brand & Location */}
-        <div className="w-full md:w-auto flex items-center justify-between md:justify-start gap-5">
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 bg-emerald-600 group-hover:bg-emerald-700 text-white rounded-xl flex items-center justify-center shadow-sm transition-colors">
+        <div className="w-full md:w-auto flex items-center justify-between md:justify-start gap-6">
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="w-10 h-10 bg-emerald-600 group-hover:bg-emerald-700 text-white rounded-2xl flex items-center justify-center shadow-md shadow-emerald-600/30 transition-all duration-300 group-hover:scale-105">
               <UtensilsCrossed className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div>
-              <span className="text-xl font-black tracking-tight text-gray-900 block leading-none">
+              <span className="text-2xl font-black tracking-tight text-slate-900 block leading-none">
                 Dish<span className="text-emerald-600">ly</span>
               </span>
-              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">
+              <span className="text-[10px] text-emerald-600 font-extrabold uppercase tracking-widest block mt-0.5">
                 Food Delivery
               </span>
             </div>
@@ -103,13 +103,13 @@ const Header = () => {
           {/* Quick Location Indicator (Swiggy/Zomato style) */}
           <Link
             to="/cart"
-            className="hidden sm:flex items-center gap-1.5 text-xs text-gray-600 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200/70 transition cursor-pointer"
+            className="hidden sm:flex items-center gap-2 text-xs text-slate-600 bg-slate-50 hover:bg-slate-100/90 px-3.5 py-1.5 rounded-full border border-slate-200/80 transition cursor-pointer"
             title="View or change delivery address"
           >
             <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-            <span className="font-bold text-gray-800">{savedAddress?.type || "Home"}</span>
-            <span className="text-gray-400">•</span>
-            <span className="text-gray-500 truncate max-w-[130px]">
+            <span className="font-extrabold text-slate-800">{savedAddress?.type || "Home"}</span>
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-500 font-medium truncate max-w-[140px]">
               {savedAddress?.street || "42 Gourmet Ave"}
             </span>
           </Link>
