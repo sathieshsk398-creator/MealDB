@@ -8,7 +8,6 @@ import {
   EyeOff,
   LogIn,
   AlertCircle,
-  Sparkles,
   ArrowRight,
   ShieldCheck,
 } from "lucide-react";
@@ -42,12 +41,7 @@ const Login = () => {
       const res = await login(email, password);
       setLoading(false);
       if (res.success) {
-        // Route user or shop owner based on role
-        if (res.role === "admin" || res.user?.role === "admin") {
-          navigate("/admin", { replace: true });
-        } else {
-          navigate(redirectTarget, { replace: true });
-        }
+        navigate(redirectTarget, { replace: true });
       } else {
         setError(res.error || "Invalid email or password.");
       }
@@ -55,12 +49,6 @@ const Login = () => {
       setLoading(false);
       setError("An unexpected error occurred during login. Please try again.");
     }
-  };
-
-  const handleFillDemo = (demoEmail, demoPassword) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setError("");
   };
 
   return (
@@ -170,46 +158,6 @@ const Login = () => {
               <span>{loading ? "Signing in..." : "Sign In to Account"}</span>
             </button>
           </form>
-
-          {/* Quick Demo Pre-Fill Helper */}
-          <div className="mt-6 pt-5 border-t border-gray-100">
-            <p className="text-xs font-semibold text-gray-500 mb-2.5 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Quick Demo Credentials:</span>
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => handleFillDemo("alex@example.com", "password123")}
-                className="text-left p-2.5 rounded-xl border border-gray-100 bg-gray-50/70 hover:bg-emerald-50 hover:border-emerald-200 transition cursor-pointer group"
-              >
-                <div className="text-[11px] font-bold text-gray-800 group-hover:text-emerald-800">
-                  Alex Morgan
-                </div>
-                <div className="text-[10px] text-gray-500 truncate">Customer (User)</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleFillDemo("sarah@foodie.com", "password123")}
-                className="text-left p-2.5 rounded-xl border border-gray-100 bg-gray-50/70 hover:bg-emerald-50 hover:border-emerald-200 transition cursor-pointer group"
-              >
-                <div className="text-[11px] font-bold text-gray-800 group-hover:text-emerald-800">
-                  Sarah Jenkins
-                </div>
-                <div className="text-[10px] text-gray-500 truncate">Customer (User)</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleFillDemo("admin@mealdb.com", "password123")}
-                className="text-left p-2.5 rounded-xl border border-amber-200 bg-amber-50/60 hover:bg-amber-100/70 hover:border-amber-300 transition cursor-pointer group"
-              >
-                <div className="text-[11px] font-bold text-amber-900 group-hover:text-amber-950">
-                  Platform Admin
-                </div>
-                <div className="text-[10px] text-amber-700 truncate">Shop Owner (Admin)</div>
-              </button>
-            </div>
-          </div>
 
           {/* Switch to Register */}
           <div className="mt-6 text-center text-xs text-gray-600">

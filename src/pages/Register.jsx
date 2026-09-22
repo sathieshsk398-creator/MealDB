@@ -59,11 +59,7 @@ const Register = () => {
       if (res.success) {
         setSuccessNotice(true);
         setTimeout(() => {
-          if (res.role === "admin" || res.user?.role === "admin") {
-            navigate("/admin", { replace: true });
-          } else {
-            navigate(redirectTarget, { replace: true });
-          }
+          navigate(redirectTarget, { replace: true });
         }, 500);
       } else {
         setError(res.error || "Failed to register account.");

@@ -1,6 +1,6 @@
 {
-  "name": "MealDB",
-  "description": "Swiggy/Zomato style food delivery and meal discovery app with cart, pricing, and checkout.",
+  "name": "Dishly",
+  "description": "Dishly FOOD DELIVERY - Authentic South Indian & Tamil Nadu cuisine food delivery app with diverse regional dishes, cart, pricing, and live tracking.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

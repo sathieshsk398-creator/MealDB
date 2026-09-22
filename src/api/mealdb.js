@@ -1,21 +1,22 @@
-import axios from "axios";
 import {
   getCustomDishes,
   getCustomDishesByCategory,
   getCustomDishById,
   searchCustomDishes,
 } from "../utils/customDishes";
-
-const BASE = "https://www.themealdb.com/api/json/v1/1";
+import {
+  INDIAN_CATEGORIES,
+  INDIAN_MEALS,
+  getFullMealData,
+} from "../data/indianDishesData";
 
 export const fetchCategories = async () => {
   try {
-    const res = await axios.get(`${BASE}/categories.php`);
-    const apiCategories = res.data?.categories || [];
-
-    // Check if any custom dishes belong to categories not present in MealDB (e.g. Starter, Main Course)
+    // Custom dishes can introduce extra custom categories if created by admin
     const customDishes = getCustomDishes();
-    const existingCatNames = new Set(apiCategories.map((c) => c.strCategory.toLowerCase()));
+    const existingCatNames = new Set(
+      INDIAN_CATEGORIES.map((c) => c.strCategory.toLowerCase())
+    );
 
     const extraCategories = [];
     customDishes.forEach((dish) => {
@@ -34,49 +35,92 @@ export const fetchCategories = async () => {
     });
 
     return {
-      ...res,
       data: {
-        ...res.data,
-        categories: [...apiCategories, ...extraCategories],
+        categories: [...INDIAN_CATEGORIES, ...extraCategories],
       },
     };
   } catch (error) {
     console.error("fetchCategories error:", error);
-    return { data: { categories: [] } };
+    return { data: { categories: INDIAN_CATEGORIES } };
   }
 };
 
 export const fetchMealsByCategory = async (cat) => {
-  const customMatching = getCustomDishesByCategory(cat);
-
-  try {
-    const res = await axios.get(`${BASE}/filter.php?c=${encodeURIComponent(cat)}`);
-    const apiMeals = Array.isArray(res.data?.meals) ? res.data.meals : [];
-
-    // Avoid duplicate IDs if a custom dish shares an ID with an API dish
-    const customIds = new Set(customMatching.map((m) => String(m.idMeal)));
-    const filteredApiMeals = apiMeals.filter((m) => !customIds.has(String(m.idMeal)));
-
-    // Merged with custom dishes prioritized at the top
-    const merged = [...customMatching, ...filteredApiMeals];
-
-    return {
-      data: {
-        meals: merged.length > 0 ? merged : null,
-      },
-    };
-  } catch {
-    // If MealDB doesn't recognize custom category, return custom matching dishes
-    return {
-      data: {
-        meals: customMatching.length > 0 ? customMatching : null,
-      },
-    };
+  if (!cat) {
+    return { data: { meals: INDIAN_MEALS.slice(0, 13).map(getFullMealData) } };
   }
+
+  const normalized = cat.toLowerCase().trim();
+
+  // Find admin custom dishes matching this category
+  const customMatching = getCustomDishesByCategory(cat);
+  const customIds = new Set(customMatching.map((m) => String(m.idMeal)));
+
+  // Filter curated Indian dishes
+  let filtered = INDIAN_MEALS.filter((m) => {
+    const mealCat = (m.strCategory || "").toLowerCase().trim();
+    if (mealCat === normalized) return true;
+
+    // Handle friendly aliases
+    if (normalized === "tiffin" || normalized === "breakfast") {
+      return mealCat === "tamil nadu tiffin";
+    }
+    if (normalized === "biryani" || normalized === "rice") {
+      return mealCat === "biryani & rice";
+    }
+    if (normalized === "curry" || normalized === "curries" || normalized === "kulambu") {
+      return mealCat === "tamil curries & gravies";
+    }
+    if (normalized === "north indian" || normalized === "mughlai") {
+      return mealCat === "north indian delights";
+    }
+    if (normalized === "snacks" || normalized === "starters" || normalized === "starter") {
+      return mealCat === "starters & snacks";
+    }
+    if (normalized === "parotta" || normalized === "breads" || normalized === "roti") {
+      return mealCat === "parottas & breads";
+    }
+    if (normalized === "dessert" || normalized === "desserts" || normalized === "sweets") {
+      return mealCat === "desserts & sweets";
+    }
+    if (normalized === "beverage" || normalized === "beverages" || normalized === "drinks" || normalized === "soups") {
+      return mealCat === "beverages & soups";
+    }
+    if (normalized === "vegetarian" || normalized === "veg") {
+      return m.dietType === "veg" || m.isVeg === true;
+    }
+    if (normalized === "chicken" || normalized === "non-veg") {
+      return (
+        (m.dietType === "non-veg" || !m.isVeg) &&
+        m.strMeal.toLowerCase().includes("chicken")
+      );
+    }
+    return false;
+  });
+
+  // If alias didn't yield meals, fallback to search in category name
+  if (filtered.length === 0) {
+    filtered = INDIAN_MEALS.filter((m) =>
+      (m.strCategory || "").toLowerCase().includes(normalized)
+    );
+  }
+
+  // Format all with full meal attributes
+  const fullDishes = filtered
+    .filter((m) => !customIds.has(String(m.idMeal)))
+    .map(getFullMealData);
+
+  const merged = [...customMatching, ...fullDishes];
+
+  return {
+    data: {
+      meals: merged.length > 0 ? merged : null,
+    },
+  };
 };
 
 export const fetchMealsById = async (id) => {
-  // First check if this is an admin custom dish stored in localStorage
+  // 1. Check if this is an admin custom dish stored in localStorage
   const customDish = getCustomDishById(id);
   if (customDish) {
     return {
@@ -86,32 +130,61 @@ export const fetchMealsById = async (id) => {
     };
   }
 
-  // Otherwise query MealDB
-  return axios.get(`${BASE}/lookup.php?i=${id}`);
-};
-
-export const searchMeals = async (query) => {
-  const customMatching = searchCustomDishes(query);
-
-  try {
-    const res = await axios.get(`${BASE}/search.php?s=${encodeURIComponent(query)}`);
-    const apiMeals = Array.isArray(res.data?.meals) ? res.data.meals : [];
-
-    const customIds = new Set(customMatching.map((m) => String(m.idMeal)));
-    const filteredApiMeals = apiMeals.filter((m) => !customIds.has(String(m.idMeal)));
-
-    const merged = [...customMatching, ...filteredApiMeals];
-
+  // 2. Check curated Indian & Tamil Nadu dishes
+  const foundMeal = INDIAN_MEALS.find((m) => String(m.idMeal) === String(id));
+  if (foundMeal) {
     return {
       data: {
-        meals: merged.length > 0 ? merged : null,
-      },
-    };
-  } catch {
-    return {
-      data: {
-        meals: customMatching.length > 0 ? customMatching : null,
+        meals: [getFullMealData(foundMeal)],
       },
     };
   }
+
+  // 3. Fallback check by partial id or name
+  const fallback = INDIAN_MEALS.find(
+    (m) => String(m.idMeal).includes(String(id)) || String(id).includes(String(m.idMeal))
+  );
+  if (fallback) {
+    return {
+      data: {
+        meals: [getFullMealData(fallback)],
+      },
+    };
+  }
+
+  return {
+    data: {
+      meals: null,
+    },
+  };
+};
+
+export const searchMeals = async (query) => {
+  if (!query || !query.trim()) {
+    return { data: { meals: [] } };
+  }
+
+  const q = query.toLowerCase().trim();
+  const customMatching = searchCustomDishes(q);
+  const customIds = new Set(customMatching.map((m) => String(m.idMeal)));
+
+  const matched = INDIAN_MEALS.filter((m) => {
+    if (customIds.has(String(m.idMeal))) return false;
+    const nameMatch = (m.strMeal || "").toLowerCase().includes(q);
+    const catMatch = (m.strCategory || "").toLowerCase().includes(q);
+    const areaMatch = (m.strArea || "").toLowerCase().includes(q);
+    const instrMatch = (m.strInstructions || "").toLowerCase().includes(q);
+    const ingMatch = Array.isArray(m.ingredients)
+      ? m.ingredients.some((ing) => (ing.ingredient || "").toLowerCase().includes(q))
+      : false;
+    return nameMatch || catMatch || areaMatch || instrMatch || ingMatch;
+  }).map(getFullMealData);
+
+  const merged = [...customMatching, ...matched];
+
+  return {
+    data: {
+      meals: merged.length > 0 ? merged : null,
+    },
+  };
 };

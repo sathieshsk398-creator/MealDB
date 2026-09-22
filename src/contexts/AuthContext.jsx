@@ -28,26 +28,6 @@ const DEFAULT_USERS = [
     isAdmin: false,
     createdAt: new Date(Date.now() - 86400000 * 20).toISOString(),
   },
-  {
-    id: "admin_mealdb_001",
-    uid: "admin_mealdb_001",
-    email: "admin@mealdb.com",
-    name: "Platform Admin",
-    password: "password123",
-    role: "admin",
-    isAdmin: true,
-    createdAt: new Date(Date.now() - 86400000 * 60).toISOString(),
-  },
-  {
-    id: "admin_sathiesh_002",
-    uid: "admin_sathiesh_002",
-    email: "sathieshsk398@gmail.com",
-    name: "Sathiesh (Admin)",
-    password: "password123",
-    role: "admin",
-    isAdmin: true,
-    createdAt: new Date(Date.now() - 86400000 * 60).toISOString(),
-  },
 ];
 
 const getStoredUsers = () => {
@@ -118,9 +98,7 @@ export const AuthProvider = ({ children }) => {
       };
     }
 
-    const isAutoAdmin =
-      cleanEmail.includes("admin") || cleanEmail === "sathieshsk398@gmail.com";
-    const role = isAutoAdmin ? "admin" : "user";
+    const role = "user";
 
     // 1. Attempt registering via Express backend API
     try {
@@ -143,8 +121,8 @@ export const AuthProvider = ({ children }) => {
           uid: data.user._id || data.user.id,
           email: data.user.email,
           name: data.user.name,
-          role: data.user.role || role,
-          isAdmin: (data.user.role || role) === "admin",
+          role: "user",
+          isAdmin: false,
           createdAt: data.user.createdAt || new Date().toISOString(),
         };
 
@@ -152,7 +130,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(backendUser));
         window.dispatchEvent(new Event("storage"));
         setCurrentUser(backendUser);
-        return { success: true, user: backendUser, role: backendUser.role };
+        return { success: true, user: backendUser, role: "user" };
       }
 
       if (response.status === 400 || response.status === 409) {
@@ -225,17 +203,13 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
 
       if (response.ok && data.success && data.token) {
-        const isAutoAdmin =
-          cleanEmail.includes("admin") || cleanEmail === "sathieshsk398@gmail.com";
-        const role = data.user.role || (isAutoAdmin ? "admin" : "user");
-
         const sessionUser = {
           id: data.user._id || data.user.id,
           uid: data.user._id || data.user.id,
           email: data.user.email,
           name: data.user.name,
-          role,
-          isAdmin: role === "admin",
+          role: "user",
+          isAdmin: false,
           createdAt: data.user.createdAt || new Date().toISOString(),
         };
 
@@ -243,7 +217,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(sessionUser));
         window.dispatchEvent(new Event("storage"));
         setCurrentUser(sessionUser);
-        return { success: true, user: sessionUser, role };
+        return { success: true, user: sessionUser, role: "user" };
       }
 
       if (response.status === 401 || response.status === 400) {
@@ -287,14 +261,12 @@ export const AuthProvider = ({ children }) => {
       };
     }
 
-    const isAutoAdmin =
-      cleanEmail.includes("admin") || cleanEmail === "sathieshsk398@gmail.com";
-    const role = userMatch.role || (isAutoAdmin ? "admin" : "user");
+    const role = "user";
 
     const sessionUser = {
       ...userMatch,
-      role,
-      isAdmin: role === "admin",
+      role: "user",
+      isAdmin: false,
     };
 
     try {
@@ -316,6 +288,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(CURRENT_USER_KEY);
       localStorage.removeItem("currentUser");
+      localStorage.removeItem("mealdb_favorites");
       window.dispatchEvent(new Event("storage"));
     } catch (err) {
       console.error("Logout error:", err);

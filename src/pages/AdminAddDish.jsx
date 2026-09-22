@@ -66,17 +66,16 @@ const IMAGE_PRESETS = [
 ];
 
 const POPULAR_CATEGORIES = [
-  "Starter",
-  "Main Course",
+  "Tamil Nadu Tiffin",
+  "Biryani & Rice",
+  "Tamil Curries & Gravies",
+  "North Indian Delights",
+  "Starters & Snacks",
+  "Parottas & Breads",
+  "Desserts & Sweets",
+  "Beverages & Soups",
   "Vegetarian",
-  "Chicken",
-  "Seafood",
-  "Dessert",
-  "Breakfast",
-  "Beverages",
-  "Side",
-  "Pasta",
-  "Lamb",
+  "Non-Veg",
 ];
 
 const AdminAddDishInner = () => {

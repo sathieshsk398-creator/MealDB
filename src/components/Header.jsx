@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   ShoppingCart,
-  Search,
   Heart,
   UtensilsCrossed,
   MapPin,
@@ -12,16 +11,13 @@ import {
   ChevronDown,
   Mail,
   Clock,
-  LayoutDashboard,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { useAdminAuth } from "../contexts/AdminAuthContext";
 import { useCart } from "../contexts/CartContext";
 import { useFavorites } from "../contexts/FavoritesContext";
 import { useCurrency } from "../contexts/CurrencyContext";
 
 const Header = () => {
-  const [query, setQuery] = useState("");
   const [activeOrder, setActiveOrder] = useState(null);
   const [savedAddress, setSavedAddress] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -32,7 +28,6 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser, logout } = useAuth();
-  const { isAdminLoggedIn } = useAdminAuth();
   const { totalCount } = useCart();
   const { favorites } = useFavorites();
   const { currency, setCurrency, toggleCurrency, exchangeRate } = useCurrency();
@@ -80,12 +75,6 @@ const Header = () => {
     return () => window.removeEventListener("storage", checkState);
   }, [location.pathname, currentUser]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (!query.trim()) return;
-    navigate(`/search?q=${encodeURIComponent(query.trim())}`);
-  };
-
   const handleLogout = () => {
     setShowDropdown(false);
     logout();
@@ -94,7 +83,7 @@ const Header = () => {
 
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-xs">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row gap-3 md:gap-6 items-center justify-between">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
         {/* Brand & Location */}
         <div className="w-full md:w-auto flex items-center justify-between md:justify-start gap-5">
           <Link to="/" className="flex items-center gap-2 group">
@@ -103,7 +92,7 @@ const Header = () => {
             </div>
             <div>
               <span className="text-xl font-black tracking-tight text-gray-900 block leading-none">
-                Meal<span className="text-emerald-600">DB</span>
+                Dish<span className="text-emerald-600">ly</span>
               </span>
               <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">
                 Food Delivery
@@ -204,19 +193,6 @@ const Header = () => {
                       </div>
                       <div className="py-1 text-xs">
                         <Link
-                          to="/admin"
-                          onClick={() => setShowMobileDropdown(false)}
-                          className="flex items-center justify-between px-4 py-2 font-bold text-slate-800 hover:bg-emerald-50 transition border-b border-gray-100"
-                        >
-                          <div className="flex items-center gap-2">
-                            <LayoutDashboard className="w-4 h-4 text-emerald-600" />
-                            <span>Admin Analytics</span>
-                          </div>
-                          <span className="text-[9px] uppercase font-mono px-1 rounded bg-slate-100 text-slate-600 font-bold">
-                            {isAdminLoggedIn ? "Active" : "Portal"}
-                          </span>
-                        </Link>
-                        <Link
                           to="/profile"
                           onClick={() => setShowMobileDropdown(false)}
                           className="flex items-center gap-2 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50 transition"
@@ -285,19 +261,6 @@ const Header = () => {
                           </span>
                         )}
                       </Link>
-                      <Link
-                        to="/admin"
-                        onClick={() => setShowMobileDropdown(false)}
-                        className="flex items-center justify-between px-4 py-2 font-bold text-slate-800 hover:bg-emerald-50 transition border-t border-gray-100 mt-1"
-                      >
-                        <div className="flex items-center gap-2">
-                          <LayoutDashboard className="w-4 h-4 text-emerald-600" />
-                          <span>Admin Analytics</span>
-                        </div>
-                        <span className="text-[9px] uppercase font-mono px-1 rounded bg-slate-100 text-slate-600 font-bold">
-                          {isAdminLoggedIn ? "Active" : "Portal"}
-                        </span>
-                      </Link>
                     </div>
                   )}
                 </div>
@@ -305,27 +268,6 @@ const Header = () => {
             </div>
           </div>
         </div>
-
-        {/* Search Bar */}
-        <form
-          onSubmit={handleSearch}
-          className="w-full md:flex-1 max-w-md relative flex items-center"
-        >
-          <Search className="w-4 h-4 text-gray-400 absolute left-3.5 pointer-events-none" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full bg-gray-50 hover:bg-gray-100/80 focus:bg-white text-sm text-gray-900 pl-10 pr-20 py-2 rounded-xl border border-gray-200 outline-none focus:border-emerald-600 transition"
-            placeholder="Search dishes, cuisines, ingredients..."
-          />
-          <button
-            type="submit"
-            className="absolute right-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition cursor-pointer"
-          >
-            Search
-          </button>
-        </form>
 
         {/* Navigation Links, Cart Icon & User Auth */}
         <div className="hidden md:flex items-center gap-5 text-sm font-semibold">
@@ -462,26 +404,6 @@ const Header = () => {
                       <User className="w-4 h-4 text-emerald-600" />
                       <span>Consumer Login / Sign Up</span>
                     </Link>
-
-                    <Link
-                      to="/admin"
-                      onClick={() => setShowDropdown(false)}
-                      className="flex items-center justify-between px-4 py-2.5 font-bold text-slate-800 hover:text-emerald-700 hover:bg-emerald-50 transition border-t border-gray-100 mt-1"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <LayoutDashboard className="w-4 h-4 text-emerald-600" />
-                        <span>Admin Analytics</span>
-                      </div>
-                      <span
-                        className={`text-[10px] uppercase font-mono px-1.5 py-0.5 rounded font-extrabold ${
-                          isAdminLoggedIn
-                            ? "bg-emerald-200 text-emerald-900"
-                            : "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        {isAdminLoggedIn ? "Active" : "Portal"}
-                      </span>
-                    </Link>
                   </div>
                 </div>
               )}
@@ -523,26 +445,6 @@ const Header = () => {
 
                   {/* Dropdown Links */}
                   <div className="py-1 text-xs">
-                    <Link
-                      to="/admin"
-                      onClick={() => setShowDropdown(false)}
-                      className="flex items-center justify-between px-4 py-2 font-bold text-slate-800 hover:text-emerald-700 hover:bg-emerald-50 transition border-b border-gray-100 mb-1"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <LayoutDashboard className="w-4 h-4 text-emerald-600" />
-                        <span>Admin Analytics</span>
-                      </div>
-                      <span
-                        className={`text-[10px] uppercase font-mono px-1.5 py-0.5 rounded font-extrabold ${
-                          isAdminLoggedIn
-                            ? "bg-emerald-200 text-emerald-900"
-                            : "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        {isAdminLoggedIn ? "Active" : "Portal"}
-                      </span>
-                    </Link>
-
                     <Link
                       to="/profile"
                       onClick={() => setShowDropdown(false)}

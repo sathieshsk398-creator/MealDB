@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { Star, Clock, Plus, Minus, ShoppingCart, Check, UtensilsCrossed, Heart } from "lucide-react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { Star, Clock, Plus, Minus, ShoppingCart, Check, UtensilsCrossed, Heart, Zap } from "lucide-react";
 import { useFavorites } from "../contexts/FavoritesContext";
 import { useCart } from "../contexts/CartContext";
+import { useAuth } from "../contexts/AuthContext";
 import { useCurrency } from "../contexts/CurrencyContext";
 import { fetchMealsById } from "../api/mealdb";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -11,6 +12,8 @@ import { getMealPrice, getMealRating, getMealDeliveryTime } from "../utils/price
 
 const MealDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [mealData, setMealData] = useState({ meal: null, id: null });
   const [loading, setLoading] = useState(true);
   const [addedNotice, setAddedNotice] = useState(false);
@@ -54,6 +57,41 @@ const MealDetails = () => {
     setTimeout(() => setAddedNotice(false), 2500);
   };
 
+  const handleBuyNow = () => {
+    if (!currentUser) {
+      navigate("/login", {
+        state: {
+          from: "/cart?mode=buynow",
+          message: "Please sign in to proceed with Buy Now.",
+        },
+      });
+      return;
+    }
+
+    const buyNowDish = {
+      idMeal: String(meal.idMeal),
+      strMeal: meal.strMeal || "Delicious Dish",
+      strMealThumb: meal.strMealThumb || "",
+      strCategory: meal.strCategory || "Meal",
+      strArea: meal.strArea || "Chef Special",
+      price: typeof meal.price === "number" ? meal.price : price,
+      quantity: quantity > 0 ? quantity : 1,
+      deliveryTime: deliveryTime || "25-35 mins",
+      dietType: meal.dietType || null,
+      isCustom: Boolean(meal.isCustom),
+    };
+
+    try {
+      sessionStorage.setItem("mealdb_buynow_item", JSON.stringify(buyNowDish));
+    } catch (err) {
+      console.warn("Failed to persist buy now item to session", err);
+    }
+
+    navigate("/cart?mode=buynow", {
+      state: { buyNowItem: buyNowDish },
+    });
+  };
+
   const ingredients = [];
   for (let i = 1; i <= 20; i++) {
     const ing = meal[`strIngredient${i}`];
@@ -80,6 +118,7 @@ const MealDetails = () => {
               src={meal.strMealThumb}
               alt={meal.strMeal}
               className="w-full h-80 sm:h-96 object-cover"
+              referrerPolicy="no-referrer"
             />
           </div>
           <div className="absolute top-4 right-4 z-10">
@@ -169,6 +208,16 @@ const MealDetails = () => {
                   </Link>
                 </div>
               )}
+
+              <button
+                type="button"
+                onClick={handleBuyNow}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white font-bold px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer text-sm"
+                title="Instant checkout - purchase only this dish"
+              >
+                <Zap className="w-4 h-4 fill-white stroke-white" />
+                <span>Buy Now</span>
+              </button>
 
               <button
                 type="button"

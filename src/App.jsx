@@ -1,5 +1,7 @@
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import Header from "./components/Header";
+import SplashScreen from "./components/SplashScreen";
 import Home from "./pages/Home";
 import CategoryMeals from "./pages/CategoryMeals";
 import MealDetails from "./pages/MealDetails";
@@ -11,25 +13,17 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import OrderHistory from "./pages/OrderHistory";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminLogin from "./pages/AdminLogin";
-import AdminAddDish from "./pages/AdminAddDish";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AdminRoute from "./components/AdminRoute";
 import { AuthProvider } from "./contexts/AuthContext";
-import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import { AddressProvider } from "./contexts/AddressContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
 import { CartProvider } from "./contexts/CartContext";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
 
 const AppContent = () => {
-  const location = useLocation();
-  const isAdminPath = location.pathname.startsWith("/admin");
-
   return (
-    <div className={isAdminPath ? "min-h-screen bg-slate-950 flex flex-col" : "min-h-screen bg-gray-50/50 flex flex-col"}>
-      {!isAdminPath && <Header />}
+    <div className="min-h-screen bg-gray-50/50 flex flex-col">
+      <Header />
       <main className="flex-1">
         <Routes>
           {/* Public Browsing Routes */}
@@ -43,6 +37,11 @@ const AppContent = () => {
           {/* Auth Pages */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+          {/* Redirect removed admin routes */}
+          <Route path="/admin-login" element={<Navigate to="/login" replace />} />
+          <Route path="/admin" element={<Navigate to="/" replace />} />
+          <Route path="/admin/*" element={<Navigate to="/" replace />} />
 
           {/* Protected Routes (Require Authentication) */}
           <Route
@@ -94,37 +93,6 @@ const AppContent = () => {
             }
           />
 
-          {/* Admin Login Route (Shop Owner dedicated authentication) */}
-          <Route path="/admin-login" element={<AdminLogin />} />
-
-          {/* Admin Analytics Dashboard Route (Strictly Protected by AdminRoute) */}
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <AdminDashboard />
-              </AdminRoute>
-            }
-          />
-
-          {/* Admin Menu Management: Add & Edit Dish (Strictly Protected by AdminRoute) */}
-          <Route
-            path="/admin/add-dish"
-            element={
-              <AdminRoute>
-                <AdminAddDish />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/edit-dish/:id"
-            element={
-              <AdminRoute>
-                <AdminAddDish />
-              </AdminRoute>
-            }
-          />
-
           {/* 404 Fallback */}
           <Route
             path="*"
@@ -148,10 +116,16 @@ const AppContent = () => {
 };
 
 const App = () => {
+  // Always show the splash screen for 10 seconds on page load/refresh
+  const [showSplash, setShowSplash] = useState(true);
+
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AdminAuthProvider>
+    <>
+      {showSplash && (
+        <SplashScreen onFinish={() => setShowSplash(false)} duration={10000} />
+      )}
+      <BrowserRouter>
+        <AuthProvider>
           <CurrencyProvider>
             <AddressProvider>
               <FavoritesProvider>
@@ -161,9 +135,9 @@ const App = () => {
               </FavoritesProvider>
             </AddressProvider>
           </CurrencyProvider>
-        </AdminAuthProvider>
-      </AuthProvider>
-    </BrowserRouter>
+        </AuthProvider>
+      </BrowserRouter>
+    </>
   );
 };
 

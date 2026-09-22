@@ -4,14 +4,12 @@ import {
   Mail,
   Calendar,
   LogOut,
-  Database,
   ShoppingCart,
   Heart,
   Bike,
   MapPin,
   Check,
   Edit2,
-  ShieldCheck,
   ArrowRight,
   Clock,
   Coins,
@@ -26,7 +24,7 @@ import { getOrderHistory } from "../utils/orderStorage";
 
 const Profile = () => {
   const { currentUser, logout, updateProfile } = useAuth();
-  const { totalCount, cartItems } = useCart();
+  const { totalCount } = useCart();
   const { favorites } = useFavorites();
   const { addresses } = useAddress();
   const { currency, setCurrency, exchangeRate, formatPrice } = useCurrency();
@@ -320,82 +318,9 @@ const Profile = () => {
       <div className="bg-white rounded-3xl p-6 sm:p-7 border border-gray-100 shadow-sm">
         <AddressBook
           title="My Delivery Addresses"
-          subtitle="Add, edit, or delete delivery addresses saved to your isolated profile"
+          subtitle="Add, edit, or delete delivery addresses saved to your profile"
           allowSelect={true}
         />
-      </div>
-
-      {/* Local Storage Data Partitioning Card */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-gray-100 shadow-sm space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl">
-              <Database className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="font-bold text-gray-900 text-base">
-                Local Storage Partitioning
-              </h2>
-              <p className="text-xs text-gray-500">
-                Your addresses, cart, and orders are isolated cleanly per user account in browser storage
-              </p>
-            </div>
-          </div>
-          <span className="hidden sm:inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Isolated Local Partition</span>
-          </span>
-        </div>
-
-        <div className="grid sm:grid-cols-2 gap-3 text-xs">
-          <div className="p-3.5 bg-gray-50/70 rounded-xl border border-gray-100">
-            <div className="text-gray-400 font-semibold uppercase text-[10px] tracking-wider mb-1">
-              Address Storage Key
-            </div>
-            <code className="text-emerald-700 font-mono font-bold block truncate">
-              addresses_{currentUser.email?.toLowerCase().trim()}
-            </code>
-            <p className="text-gray-500 text-[11px] mt-1">
-              {addresses.length} saved delivery addresses
-            </p>
-          </div>
-
-          <div className="p-3.5 bg-gray-50/70 rounded-xl border border-gray-100">
-            <div className="text-gray-400 font-semibold uppercase text-[10px] tracking-wider mb-1">
-              Cart Storage Key
-            </div>
-            <code className="text-emerald-700 font-mono font-bold block truncate">
-              cart_{currentUser.email?.toLowerCase().trim()}
-            </code>
-            <p className="text-gray-500 text-[11px] mt-1">
-              {cartItems.length} items ({totalCount} total quantity)
-            </p>
-          </div>
-
-          <div className="p-3.5 bg-gray-50/70 rounded-xl border border-gray-100">
-            <div className="text-gray-400 font-semibold uppercase text-[10px] tracking-wider mb-1">
-              Favorites Storage Key
-            </div>
-            <code className="text-rose-600 font-mono font-bold block truncate">
-              favorites_{currentUser.email?.toLowerCase().trim()}
-            </code>
-            <p className="text-gray-500 text-[11px] mt-1">
-              {favorites.length} saved favorite dishes
-            </p>
-          </div>
-
-          <div className="p-3.5 bg-gray-50/70 rounded-xl border border-gray-100">
-            <div className="text-gray-400 font-semibold uppercase text-[10px] tracking-wider mb-1">
-              Active Order Tracker Key
-            </div>
-            <code className="text-emerald-700 font-mono font-bold block truncate">
-              active_order_{currentUser.email?.toLowerCase().trim()}
-            </code>
-            <p className="text-gray-500 text-[11px] mt-1">
-              Live status progression & order history
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

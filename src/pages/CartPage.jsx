@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   ShoppingBag,
   Plus,
@@ -23,6 +23,8 @@ import {
   Smartphone,
   Wallet,
   Loader2,
+  Zap,
+  ShoppingCart,
 } from "lucide-react";
 import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -33,6 +35,11 @@ import AddressFormModal from "../components/AddressFormModal";
 import { registerOrderInAdminStore } from "../utils/adminAnalytics";
 
 const CartPage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(location.search);
+  const isBuyNowMode = searchParams.get("mode") === "buynow";
+
   const {
     cartItems,
     cartLoading,
@@ -46,7 +53,40 @@ const CartPage = () => {
   } = useCart();
   const { currentUser } = useAuth();
   const { formatPrice } = useCurrency();
-  const navigate = useNavigate();
+
+  // Buy Now item state (from location.state or fallback to sessionStorage)
+  const [buyNowItem, setBuyNowItem] = useState(() => {
+    if (!isBuyNowMode) return null;
+    if (location.state?.buyNowItem) {
+      try {
+        sessionStorage.setItem("mealdb_buynow_item", JSON.stringify(location.state.buyNowItem));
+      } catch (e) {
+        console.warn("Error storing buyNowItem", e);
+      }
+      return location.state.buyNowItem;
+    }
+    try {
+      const stored = sessionStorage.getItem("mealdb_buynow_item");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const isSingleBuyNow = Boolean(isBuyNowMode && buyNowItem);
+
+  // Active items and bill calculations for this checkout session
+  const displayedItems = isSingleBuyNow ? [buyNowItem] : cartItems;
+  const displayedItemTotal = isSingleBuyNow
+    ? (buyNowItem.price || 0) * (buyNowItem.quantity || 1)
+    : itemTotal;
+  const displayedDeliveryFee = isSingleBuyNow ? 49 : deliveryFee;
+  const displayedTotalAmount = isSingleBuyNow
+    ? displayedItemTotal + displayedDeliveryFee
+    : totalAmount;
+  const displayedTotalCount = isSingleBuyNow
+    ? (buyNowItem.quantity || 1)
+    : totalCount;
 
   const userEmail = currentUser?.email?.toLowerCase().trim() || null;
   const activeOrderKey = userEmail ? `active_order_${userEmail}` : "mealdb_active_order";
@@ -103,8 +143,58 @@ const CartPage = () => {
     ? formatAddress(activeDeliveryAddress)
     : "Standard Home Delivery";
 
+  const handleUpdateItemQuantity = (idMeal, delta) => {
+    if (isSingleBuyNow) {
+      const nextQty = (buyNowItem.quantity || 1) + delta;
+      if (nextQty <= 0) {
+        try {
+          sessionStorage.removeItem("mealdb_buynow_item");
+        } catch (e) {
+          console.warn(e);
+        }
+        setBuyNowItem(null);
+      } else {
+        const updated = { ...buyNowItem, quantity: nextQty };
+        setBuyNowItem(updated);
+        try {
+          sessionStorage.setItem("mealdb_buynow_item", JSON.stringify(updated));
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+    } else {
+      updateQuantity(idMeal, delta);
+    }
+  };
+
+  const handleRemoveItem = (idMeal) => {
+    if (isSingleBuyNow) {
+      try {
+        sessionStorage.removeItem("mealdb_buynow_item");
+      } catch (e) {
+        console.warn(e);
+      }
+      setBuyNowItem(null);
+    } else {
+      removeFromCart(idMeal);
+    }
+  };
+
+  const handleClearCurrentView = () => {
+    if (isSingleBuyNow) {
+      try {
+        sessionStorage.removeItem("mealdb_buynow_item");
+      } catch (e) {
+        console.warn(e);
+      }
+      setBuyNowItem(null);
+    } else {
+      clearCart();
+    }
+  };
+
   const handlePlaceOrder = () => {
-    if (cartItems.length === 0 || isPlacingOrder) return;
+    if (displayedItems.length === 0 || isPlacingOrder) return;
     setIsPlacingOrder(true);
 
     const orderId = `SW-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -113,11 +203,11 @@ const CartPage = () => {
       id: orderId,
       userEmail: currentUser?.email || null,
       userName: currentUser?.name || null,
-      items: [...cartItems],
-      itemTotal,
-      deliveryFee,
-      totalAmount,
-      totalCount,
+      items: [...displayedItems],
+      itemTotal: displayedItemTotal,
+      deliveryFee: displayedDeliveryFee,
+      totalAmount: displayedTotalAmount,
+      totalCount: displayedTotalCount,
       placedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       createdAt: now,
       statusIndex: 0,
@@ -130,6 +220,7 @@ const CartPage = () => {
       paymentMethod,
       paymentStatus: paymentMethod === "Cash on Delivery" ? "Pending on Delivery" : "Paid Online (Mock)",
       userId: currentUser?.uid || null,
+      isBuyNow: isSingleBuyNow,
     };
 
     // Save active order to localStorage
@@ -141,8 +232,18 @@ const CartPage = () => {
       console.error("Failed to save order:", e);
     }
 
-    // Clear cart
-    clearCart();
+    if (isSingleBuyNow) {
+      // Clear ONLY the buy now single item; user's regular cart remains intact!
+      try {
+        sessionStorage.removeItem("mealdb_buynow_item");
+      } catch (e) {
+        console.warn(e);
+      }
+      setBuyNowItem(null);
+    } else {
+      // Clear regular cart
+      clearCart();
+    }
 
     // Brief transition effect then redirect to OrderTracking.jsx
     setTimeout(() => {
@@ -160,8 +261,8 @@ const CartPage = () => {
     );
   }
 
-  // Empty Cart View
-  if (cartItems.length === 0) {
+  // Empty Cart / Empty Buy Now View
+  if (displayedItems.length === 0) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
         {existingActiveOrder ? (
@@ -190,40 +291,109 @@ const CartPage = () => {
           </div>
         ) : null}
 
-        <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600 shadow-inner">
-          <ShoppingBag className="w-12 h-12 stroke-[1.5]" />
+        <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ${
+          isBuyNowMode ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
+        }`}>
+          {isBuyNowMode ? (
+            <Zap className="w-12 h-12 stroke-[1.5]" />
+          ) : (
+            <ShoppingBag className="w-12 h-12 stroke-[1.5]" />
+          )}
         </div>
+
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-          Your cart is empty
+          {isBuyNowMode ? "No Buy Now dish selected" : "Your cart is empty"}
         </h2>
         <p className="text-gray-500 max-w-md mx-auto mb-8 text-sm sm:text-base">
-          Good food is always cooking! Go ahead and explore delicious dishes from top cuisines and add them to your cart.
+          {isBuyNowMode && totalCount > 0 ? (
+            <>You have {totalCount} items waiting in your regular cart. You can proceed with them or select a dish to Buy Now.</>
+          ) : (
+            <>Good food is always cooking! Go ahead and explore delicious dishes from top cuisines and place your order.</>
+          )}
         </p>
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer text-sm tracking-wide"
-        >
-          <UtensilsCrossed className="w-4 h-4" />
-          <span>Explore Delicious Meals</span>
-        </Link>
+
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          {isBuyNowMode && totalCount > 0 && (
+            <Link
+              to="/cart"
+              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3.5 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer text-sm tracking-wide"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              <span>Go to Full Cart ({totalCount} items)</span>
+            </Link>
+          )}
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer text-sm tracking-wide"
+          >
+            <UtensilsCrossed className="w-4 h-4" />
+            <span>Explore Delicious Meals</span>
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+      {/* Buy Now Notification Banner */}
+      {isSingleBuyNow && (
+        <div className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+              <Zap className="w-5 h-5 fill-white stroke-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-extrabold text-amber-950">
+                  Instant Buy Now Checkout
+                </h3>
+                <span className="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+                  Only This Dish
+                </span>
+              </div>
+              <p className="text-xs text-amber-800 mt-0.5">
+                Only this selected dish is being ordered now. {totalCount > 0 ? (
+                  <span>Your regular cart ({totalCount} items) will remain untouched and safe.</span>
+                ) : (
+                  <span>Direct fast order.</span>
+                )}
+              </p>
+            </div>
+          </div>
+          {totalCount > 0 && (
+            <Link
+              to="/cart"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-white hover:bg-emerald-50 border border-emerald-300 px-3.5 py-2 rounded-xl transition shadow-2xs whitespace-nowrap self-start sm:self-center cursor-pointer"
+            >
+              <ShoppingCart className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Switch to Full Cart ({totalCount})</span>
+            </Link>
+          )}
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="mb-6 flex items-center justify-between pb-4 border-b border-gray-100">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-            Order Checkout
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
+            {isSingleBuyNow && <Zap className="w-6 h-6 text-amber-500 fill-amber-500" />}
+            <span>{isSingleBuyNow ? "Instant Order Checkout" : "Order Checkout"}</span>
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            Review your dishes and place your delivery order
+            {isSingleBuyNow
+              ? "Review your single dish and place your delivery order"
+              : "Review your dishes and place your delivery order"}
           </p>
         </div>
-        <span className="text-xs sm:text-sm font-semibold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
-          {totalCount} {totalCount === 1 ? "item" : "items"} in cart
+        <span className={`text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-full border ${
+          isSingleBuyNow
+            ? "text-amber-800 bg-amber-50 border-amber-200"
+            : "text-emerald-800 bg-emerald-50 border-emerald-200"
+        }`}>
+          {isSingleBuyNow
+            ? "1 item (Buy Now)"
+            : `${displayedTotalCount} ${displayedTotalCount === 1 ? "item" : "items"} in cart`}
         </span>
       </div>
 
@@ -411,21 +581,23 @@ const CartPage = () => {
             <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
               <div className="flex items-center gap-2">
                 <UtensilsCrossed className="w-4 h-4 text-emerald-700" />
-                <h2 className="font-bold text-gray-900 text-base">Your Selected Dishes</h2>
+                <h2 className="font-bold text-gray-900 text-base">
+                  {isSingleBuyNow ? "Buy Now Dish" : "Your Selected Dishes"}
+                </h2>
               </div>
               <button
-                onClick={clearCart}
+                onClick={handleClearCurrentView}
                 className="text-xs font-semibold text-red-600 hover:text-red-700 flex items-center gap-1 cursor-pointer transition-colors"
-                title="Clear all items"
+                title={isSingleBuyNow ? "Cancel Buy Now" : "Clear all items"}
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Clear Cart</span>
+                <span>{isSingleBuyNow ? "Cancel" : "Clear Cart"}</span>
               </button>
             </div>
 
             <div className="divide-y divide-gray-100">
-              {cartItems.map((item) => {
-                const itemSubtotal = (item.price || 0) * item.quantity;
+              {displayedItems.map((item) => {
+                const itemSubtotal = (item.price || 0) * (item.quantity || 1);
                 return (
                   <div
                     key={item.idMeal}
@@ -437,17 +609,26 @@ const CartPage = () => {
                         src={item.strMealThumb}
                         alt={item.strMeal}
                         className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border border-gray-100 shadow-xs"
+                        referrerPolicy="no-referrer"
                       />
                     </Link>
 
                     {/* Meal Details */}
                     <div className="flex-1 min-w-0">
-                      <Link
-                        to={`/meal/${item.idMeal}`}
-                        className="font-bold text-gray-900 text-sm sm:text-base hover:text-emerald-700 transition line-clamp-1"
-                      >
-                        {item.strMeal}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          to={`/meal/${item.idMeal}`}
+                          className="font-bold text-gray-900 text-sm sm:text-base hover:text-emerald-700 transition line-clamp-1"
+                        >
+                          {item.strMeal}
+                        </Link>
+                        {isSingleBuyNow && (
+                          <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-extrabold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">
+                            <Zap className="w-3 h-3 fill-amber-700 stroke-amber-700" />
+                            <span>Buy Now</span>
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-gray-500 mt-0.5">
                         {item.strCategory} • {formatPrice(item.price)} each
                       </p>
@@ -460,17 +641,17 @@ const CartPage = () => {
                     <div className="flex items-center gap-3">
                       <div className="inline-flex items-center bg-white border border-emerald-600 text-emerald-800 rounded-xl overflow-hidden shadow-xs">
                         <button
-                          onClick={() => updateQuantity(item.idMeal, -1)}
+                          onClick={() => handleUpdateItemQuantity(item.idMeal, -1)}
                           className="px-2.5 py-1.5 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
                           aria-label="Decrease quantity"
                         >
                           <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
                         </button>
                         <span className="px-2.5 text-xs sm:text-sm font-bold min-w-[24px] text-center">
-                          {item.quantity}
+                          {item.quantity || 1}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item.idMeal, 1)}
+                          onClick={() => handleUpdateItemQuantity(item.idMeal, 1)}
                           className="px-2.5 py-1.5 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
                           aria-label="Increase quantity"
                         >
@@ -487,9 +668,9 @@ const CartPage = () => {
 
                       {/* Delete icon */}
                       <button
-                        onClick={() => removeFromCart(item.idMeal)}
+                        onClick={() => handleRemoveItem(item.idMeal)}
                         className="text-gray-400 hover:text-red-600 p-1.5 transition-colors cursor-pointer"
-                        title="Remove item"
+                        title={isSingleBuyNow ? "Remove dish" : "Remove item"}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -730,8 +911,10 @@ const CartPage = () => {
             {/* Bill Breakdown */}
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between text-gray-600">
-                <span>Item Total ({totalCount} items)</span>
-                <span className="font-semibold text-gray-900">{formatPrice(itemTotal)}</span>
+                <span>
+                  {isSingleBuyNow ? "Dish Total (1 item)" : `Item Total (${displayedTotalCount} items)`}
+                </span>
+                <span className="font-semibold text-gray-900">{formatPrice(displayedItemTotal)}</span>
               </div>
 
               <div className="flex items-center justify-between text-gray-600">
@@ -742,7 +925,7 @@ const CartPage = () => {
                   </span>
                 </div>
                 <span className="font-semibold text-gray-900">
-                  {formatPrice(deliveryFee)}
+                  {formatPrice(displayedDeliveryFee)}
                 </span>
               </div>
 
@@ -771,7 +954,7 @@ const CartPage = () => {
                     <p className="text-[11px] text-gray-400">Inclusive of all applicable fees</p>
                   </div>
                   <span className="text-2xl font-black text-emerald-800 tracking-tight">
-                    {formatPrice(totalAmount)}
+                    {formatPrice(displayedTotalAmount)}
                   </span>
                 </div>
               </div>
@@ -806,17 +989,23 @@ const CartPage = () => {
             {/* Place Order CTA Button */}
             <button
               onClick={handlePlaceOrder}
-              disabled={isPlacingOrder || totalCount === 0}
-              className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-60 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-emerald-700/20 transition-all flex items-center justify-between cursor-pointer text-base"
+              disabled={isPlacingOrder || displayedTotalCount === 0}
+              className={`mt-4 w-full active:scale-[0.98] disabled:opacity-60 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all flex items-center justify-between cursor-pointer text-base ${
+                isSingleBuyNow
+                  ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-amber-600/20"
+                  : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-700/20"
+              }`}
             >
               <div className="flex flex-col text-left">
-                <span className="text-xs opacity-90 font-medium">Total: {formatPrice(totalAmount)}</span>
+                <span className="text-xs opacity-90 font-medium">Total: {formatPrice(displayedTotalAmount)}</span>
                 <span className="tracking-wide">
                   {isPlacingOrder
                     ? "Placing Order..."
                     : paymentMethod === "Cash on Delivery"
-                    ? "Place Order (Pay on Delivery)"
-                    : `Pay ${formatPrice(totalAmount)} & Place Order`}
+                    ? isSingleBuyNow
+                      ? "Place Instant Order (Pay on Delivery)"
+                      : "Place Order (Pay on Delivery)"
+                    : `Pay ${formatPrice(displayedTotalAmount)} & Place Order`}
                 </span>
               </div>
               <ArrowRight className="w-5 h-5 stroke-[2.5]" />

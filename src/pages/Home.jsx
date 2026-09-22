@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Sparkles, UtensilsCrossed, Flame, Clock, ShieldCheck, ChevronRight } from "lucide-react";
+import { UtensilsCrossed, Flame, ChevronRight } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import MealCard from "../components/MealCard";
+import HeroSection from "../components/HeroSection";
 import { fetchCategories, fetchMealsByCategory } from "../api/mealdb";
 
 const Home = () => {
   const [categories, setCategories] = useState([]);
   const [popularData, setPopularData] = useState({ meals: [], category: null });
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState("Chicken");
+  const [selectedCategory, setSelectedCategory] = useState("Tamil Nadu Tiffin");
 
   useEffect(() => {
     let ignore = false;
@@ -17,7 +18,9 @@ const Home = () => {
       fetchCategories()
         .then((res) => {
           if (!ignore) {
-            setCategories(res.data.categories || []);
+            const fetched = res.data.categories || [];
+            setCategories(fetched);
+            setSelectedCategory((prev) => (!prev && fetched.length > 0 ? fetched[0].strCategory : prev));
             setLoading(false);
           }
         })
@@ -46,8 +49,8 @@ const Home = () => {
       fetchMealsByCategory(selectedCategory)
         .then((res) => {
           if (!ignore) {
-            // Take top 8 popular dishes
-            const dishes = (res.data.meals || []).slice(0, 8);
+            // Show all dishes in the category (12-15 dishes)
+            const dishes = res.data.meals || [];
             setPopularData({ meals: dishes, category: selectedCategory });
           }
         })
@@ -79,35 +82,8 @@ const Home = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8 space-y-10 sm:space-y-12">
-      {/* Swiggy/Zomato style Hero Promo Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-900 via-teal-900 to-emerald-800 text-white p-6 sm:p-10 shadow-lg">
-        <div className="relative z-10 max-w-2xl space-y-4">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/20 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-bold text-emerald-200 border border-emerald-400/30">
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>Fast & Fresh Food Delivery</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
-            Order from top gourmet cuisines delivered hot to your doorstep.
-          </h1>
-          <p className="text-emerald-100 text-sm sm:text-base leading-relaxed max-w-xl">
-            Explore hundreds of handcrafted dishes with pure ingredients. Add to cart, customize your servings, and enjoy instant checkout.
-          </p>
-
-          <div className="pt-2 flex flex-wrap items-center gap-4 text-xs font-semibold text-emerald-200">
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-amber-400" />
-              <span>Avg 25-35 mins delivery</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Contactless & sanitized</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Decorative Background Blob */}
-        <div className="absolute -right-16 -bottom-16 w-80 h-80 bg-emerald-600/30 rounded-full blur-3xl pointer-events-none" />
-      </div>
+      {/* High-Impact Modern Food Delivery Hero Section */}
+      <HeroSection />
 
       {/* "What's on your mind?" Circular Cuisine Category Carousel */}
       <div>
@@ -142,6 +118,7 @@ const Home = () => {
                     alt={cat.strCategory}
                     className="w-full h-full object-cover"
                     loading="lazy"
+                    referrerPolicy="no-referrer"
                   />
                 </div>
                 <span
@@ -220,6 +197,7 @@ const Home = () => {
                   alt={cat.strCategory}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
+                  referrerPolicy="no-referrer"
                 />
               </div>
               <h3 className="font-bold text-gray-900 text-sm group-hover:text-emerald-700 transition-colors">
