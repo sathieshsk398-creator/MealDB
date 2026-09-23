@@ -4,6 +4,8 @@ Dishly is a full-stack food delivery web application focused on authentic **Sout
 
 The application is built as a **React (Vite) single-page frontend** paired with a lightweight **Node.js/Express + MongoDB backend** that handles authentication and cart persistence.
 
+View my app in: https://mealdb-app.onrender.com
+
 ## ✨ Features
 
 ### Customer Experience
@@ -174,9 +176,6 @@ Menu, category, and pricing data is served from a local curated dataset rather t
 - Add real-time order status updates (WebSockets)
 - Restore and harden the admin dashboard behind role-based route protection
 
-## 👤 Author
-
-**Sathiesh Kumar M**
 ## Conclusion
 
 MealDB is a fully functional recipe discovery app that demonstrates practical React skills — component-based architecture, client-side routing, context-based state management, and third-party API integration. It combines a clean, responsive UI with persistent favorites to deliver a smooth recipe browsing experience, powered entirely by TheMealDB's free public API.
@@ -185,4 +184,4 @@ MealDB is a fully functional recipe discovery app that demonstrates practical Re
 
 **Sathiesh Kumar M**
 
-View my app in: https://mealdb-app.onrender.com
+
