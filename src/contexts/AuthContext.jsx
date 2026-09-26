@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { API_BASE_URL } from "../config.js";
 
 const AuthContext = createContext(null);
 
@@ -78,7 +77,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   /**
-   * Register a new user via Express API (with localStorage fallback)
+   * Register a new user (Client-side LocalStorage)
    */
   const register = async (name, email, password) => {
     const cleanName = (name || "").trim();
@@ -100,50 +99,7 @@ export const AuthProvider = ({ children }) => {
 
     const role = "user";
 
-    // 1. Attempt registering via Express backend API
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: cleanName,
-          email: cleanEmail,
-          password: cleanPassword,
-          role,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success && data.token) {
-        const backendUser = {
-          id: data.user._id || data.user.id,
-          uid: data.user._id || data.user.id,
-          email: data.user.email,
-          name: data.user.name,
-          role: "user",
-          isAdmin: false,
-          createdAt: data.user.createdAt || new Date().toISOString(),
-        };
-
-        localStorage.setItem(TOKEN_KEY, data.token);
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(backendUser));
-        window.dispatchEvent(new Event("storage"));
-        setCurrentUser(backendUser);
-        return { success: true, user: backendUser, role: "user" };
-      }
-
-      if (response.status === 400 || response.status === 409) {
-        return {
-          success: false,
-          error: data.message || "An account with this email already exists.",
-        };
-      }
-    } catch (networkError) {
-      console.warn("Backend API not reachable at", API_BASE_URL, "- falling back to local storage:", networkError.message);
-    }
-
-    // 2. Fallback to LocalStorage registration
+    // Check existing users in LocalStorage
     const users = getStoredUsers();
     const existing = users.find((u) => u.email.toLowerCase() === cleanEmail);
     if (existing) {
@@ -169,6 +125,7 @@ export const AuthProvider = ({ children }) => {
     try {
       localStorage.setItem(USERS_KEY, JSON.stringify(updatedUsers));
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
+      localStorage.setItem(TOKEN_KEY, `local_token_${newId}`);
       window.dispatchEvent(new Event("storage"));
     } catch (e) {
       console.error("Failed to save registered user:", e);
@@ -179,7 +136,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Login with email and password via Express API (with localStorage fallback)
+   * Login with email and password (Client-side LocalStorage)
    */
   const login = async (email, password) => {
     const cleanEmail = (email || "").trim().toLowerCase();
@@ -189,48 +146,7 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: "Please enter both email and password." };
     }
 
-    // 1. Attempt logging in via Express backend API
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: cleanEmail,
-          password: cleanPassword,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success && data.token) {
-        const sessionUser = {
-          id: data.user._id || data.user.id,
-          uid: data.user._id || data.user.id,
-          email: data.user.email,
-          name: data.user.name,
-          role: "user",
-          isAdmin: false,
-          createdAt: data.user.createdAt || new Date().toISOString(),
-        };
-
-        localStorage.setItem(TOKEN_KEY, data.token);
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(sessionUser));
-        window.dispatchEvent(new Event("storage"));
-        setCurrentUser(sessionUser);
-        return { success: true, user: sessionUser, role: "user" };
-      }
-
-      if (response.status === 401 || response.status === 400) {
-        return {
-          success: false,
-          error: data.message || "Invalid email or password.",
-        };
-      }
-    } catch (networkError) {
-      console.warn("Backend API not reachable at", API_BASE_URL, "- falling back to local storage:", networkError.message);
-    }
-
-    // 2. Fallback to LocalStorage & demo credentials
+    // Verify against LocalStorage & demo credentials
     const users = getStoredUsers();
     let userMatch = users.find((u) => u.email.toLowerCase() === cleanEmail);
 
@@ -271,6 +187,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(sessionUser));
+      localStorage.setItem(TOKEN_KEY, `local_token_${sessionUser.id || sessionUser.uid}`);
       window.dispatchEvent(new Event("storage"));
     } catch (e) {
       console.error("Failed to set current user in localStorage:", e);

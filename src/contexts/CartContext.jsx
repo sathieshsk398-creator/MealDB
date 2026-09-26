@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useState, useMemo, useCallback } 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { getMealPrice } from "../utils/price";
-import { API_BASE_URL } from "../config.js";
 
 const CartContext = createContext(null);
 
@@ -70,34 +69,6 @@ export const CartProvider = ({ children }) => {
     return () => window.removeEventListener("storage", handleStorage);
   }, [currentUser]);
 
-  // Initial fetch from backend if user has a valid JWT token
-  useEffect(() => {
-    const token = localStorage.getItem("mealdb_token");
-    if (!token || !currentUser) return;
-
-    let isMounted = true;
-    fetch(`${API_BASE_URL}/api/cart`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (isMounted && data && data.cart && Array.isArray(data.cart.items)) {
-          // Only update if backend has items and local cart was empty
-          setCartItems((local) => {
-            if (local.length === 0 && data.cart.items.length > 0) {
-              return data.cart.items;
-            }
-            return local;
-          });
-        }
-      })
-      .catch(() => {});
-
-    return () => {
-      isMounted = false;
-    };
-  }, [currentUser]);
-
   /**
    * Add item to cart.
    * If user is not logged in, redirects to /login page preserving the current URL.
@@ -141,25 +112,6 @@ export const CartProvider = ({ children }) => {
           },
         ];
       });
-
-      // Synchronize with Express backend
-      const token = localStorage.getItem("mealdb_token");
-      if (token) {
-        fetch(`${API_BASE_URL}/api/cart`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            idMeal: String(meal.idMeal),
-            strMeal: meal.strMeal || "Delicious Meal",
-            strMealThumb: meal.strMealThumb || "",
-            price,
-            quantity: addQty,
-          }),
-        }).catch(() => {});
-      }
 
       return true;
     },
@@ -248,28 +200,12 @@ export const CartProvider = ({ children }) => {
     (idMeal) => {
       const mealIdStr = String(idMeal);
       setCartItems((prev) => prev.filter((item) => String(item.idMeal) !== mealIdStr));
-
-      const token = localStorage.getItem("mealdb_token");
-      if (token) {
-        fetch(`${API_BASE_URL}/api/cart/${mealIdStr}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        }).catch(() => {});
-      }
     },
     []
   );
 
   const clearCart = useCallback(() => {
     setCartItems([]);
-
-    const token = localStorage.getItem("mealdb_token");
-    if (token) {
-      fetch(`${API_BASE_URL}/api/cart`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => {});
-    }
   }, []);
 
   const getItemQuantity = useCallback(

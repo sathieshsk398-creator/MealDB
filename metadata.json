@@ -1,6 +1,6 @@
 {
   "name": "Dishly",
-  "description": "Dishly FOOD DELIVERY - Authentic South Indian & Tamil Nadu cuisine food delivery app with diverse regional dishes, cart, pricing, and live tracking.",
+  "description": "Dishly - Authentic meal explorer and recipe guide with regional dishes, cuisines, ingredients, measurements, cooking instructions, and video tutorials.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

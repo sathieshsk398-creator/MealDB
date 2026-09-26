@@ -2,6 +2,22 @@
 // Each category contains between 12 and 14 dishes (strictly meeting min 12, max 15).
 import nattuKozhiGravyImg from "../assets/images/nattu_kozhi_gravy_1790057687991.jpg";
 import muttonSukkaGravyImg from "../assets/images/mutton_sukka_gravy_1790057908192.jpg";
+import tirunelveliHalwaImg from "../assets/images/tirunelveli_halwa_1790239547904.jpg";
+import nattuKozhiSoupImg from "../assets/images/nattu_kozhi_soup_1790239561737.jpg";
+import aattukkalSoupImg from "../assets/images/aattukkal_soup_1790239580786.jpg";
+import neerMorImg from "../assets/images/neer_mor_1790239595263.jpg";
+import vazhaipooVadaiImg from "../assets/images/vazhaipoo_vadai_1790239610512.jpg";
+import mushroomPepperSukkaImg from "../assets/images/mushroom_pepper_sukka_1790239626293.jpg";
+import poonduKaraKuzhambuImg from "../assets/images/poondu_kara_kuzhambu_1790239643438.jpg";
+import venPongalImg from "../assets/images/ven_pongal_1790239659913.jpg";
+import pooriMasalaImg from "../assets/images/poori_masala_1790239676507.jpg";
+import paneerTikkaMasalaImg from "../assets/images/paneer_tikka_masala_1790239691043.jpg";
+import paneer65Img from "../assets/images/paneer_65_1790239705247.jpg";
+import kovilPuliyodharaiImg from "../assets/images/kovil_puliyodharai_1790239718743.jpg";
+import shahiTukdaImg from "../assets/images/shahi_tukda_1790239738553.jpg";
+import mangoLassiImg from "../assets/images/mango_lassi_1790239752460.jpg";
+import paruppuUrundaiImg from "../assets/images/paruppu_urundai_1790239768031.jpg";
+import butterNaanImg from "../assets/images/butter_naan_1790239783407.jpg";
 
 export const INDIAN_CATEGORIES = [
   {
@@ -154,7 +170,7 @@ export const INDIAN_MEALS = [
     dietType: "veg",
     isVeg: true,
     strArea: "Tamil Nadu",
-    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b5/Pongalpot.jpg/960px-Pongalpot.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    strMealThumb: venPongalImg,
     strInstructions: "Creamy cooked rice and moong dal infused with whole black pepper, cumin, ginger, and roasted cashews in pure ghee, accompanied by 1 crispy urad dal medu vada.",
     ingredients: [
       { ingredient: "Raw Rice & Moong Dal", measure: "1 bowl" },
@@ -238,7 +254,7 @@ export const INDIAN_MEALS = [
     dietType: "veg",
     isVeg: true,
     strArea: "Tamil Nadu",
-    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Bikaner_chole_bhature.jpg/960px-Bikaner_chole_bhature.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    strMealThumb: pooriMasalaImg,
     strInstructions: "Puffy golden deep-fried whole wheat pooris served with authentic South Indian turmeric potato-onion mash (kizhangu masala) and coconut chutney.",
     ingredients: [
       { ingredient: "Whole Wheat Puffy Pooris", measure: "3 pcs" },
@@ -341,7 +357,7 @@ export const INDIAN_MEALS = [
     dietType: "non-veg",
     isVeg: false,
     strArea: "Tamil Nadu",
-    strMealThumb: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=800&q=80",
+    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e6/Masala_Dosa_02.jpg/960px-Masala_Dosa_02.jpg",
     strInstructions: "Chennai Muslim wedding feast dum biryani with long grain basmati rice, tender spiced chicken, boiled egg, served with ennai kathirikai, raitha, and bread halwa.",
     ingredients: [
       { ingredient: "Aged Basmati Rice", measure: "350g" },
@@ -409,7 +425,7 @@ export const INDIAN_MEALS = [
     dietType: "veg",
     isVeg: true,
     strArea: "Indian",
-    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/Combo_lunch_plate_mix_with_Biriyani%2C_prawn_%26_paneer.jpg/960px-Combo_lunch_plate_mix_with_Biriyani%2C_prawn_%26_paneer.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/30/Vegetable_Biryani_served_in_a_pot.jpg/960px-Vegetable_Biryani_served_in_a_pot.jpg",
     strInstructions: "Charcoal-smoked cottage cheese cubes tossed in spicy tandoori marinade layered with basmati rice, saffron milk, caramelized onions, and fresh mint.",
     ingredients: [
       { ingredient: "Smoked Paneer Cubes", measure: "180g" },
@@ -477,7 +493,7 @@ export const INDIAN_MEALS = [
     dietType: "veg",
     isVeg: true,
     strArea: "Tamil Nadu",
-    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Pulihora_with_boiled_egg.jpg/960px-Pulihora_with_boiled_egg.jpg",
+    strMealThumb: kovilPuliyodharaiImg,
     strInstructions: "Authentic Srirangam temple style tamarind rice tossed in slow-reduced pulikachal paste with sesame oil, roasted peanuts, chana dal, and curry leaves.",
     ingredients: [
       { ingredient: "Ponni Rice (Grains Separated)", measure: "300g" },
@@ -584,7 +600,7 @@ export const INDIAN_MEALS = [
     dietType: "veg",
     isVeg: true,
     strArea: "Tamil Nadu",
-    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Chettinad_Garlic_Kara_Kuzhambu_Paste_The_Grand_Sweets_And_Snacks.jpg/960px-Chettinad_Garlic_Kara_Kuzhambu_Paste_The_Grand_Sweets_And_Snacks.jpg",
+    strMealThumb: poonduKaraKuzhambuImg,
     strInstructions: "Fiery and appetizing South Indian gravy with dozens of whole peeled garlic cloves simmered in sesame oil with tamarind, jaggery, and red chilies.",
     ingredients: [
       { ingredient: "Peeled Garlic Cloves", measure: "1 cup" },
@@ -652,7 +668,7 @@ export const INDIAN_MEALS = [
     dietType: "veg",
     isVeg: true,
     strArea: "Tamil Nadu",
-    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Kofta_Curry.JPG/960px-Kofta_Curry.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    strMealThumb: paruppuUrundaiImg,
     strInstructions: "Steamed spiced chana dal and toor dal dumplings gently poached in a rich, tangy tamarind and shallot gravy.",
     ingredients: [
       { ingredient: "Spiced Dal Dumplings (Urundai)", measure: "5 pcs" },
@@ -753,7 +769,7 @@ export const INDIAN_MEALS = [
     dietType: "veg",
     isVeg: true,
     strArea: "North Indian",
-    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fd/Chicken_tikka_masala.jpg/960px-Chicken_tikka_masala.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    strMealThumb: paneerTikkaMasalaImg,
     strInstructions: "Chargrilled cottage cheese cubes, bell peppers, and onions tossed in a thick onion-tomato gravy with garam masala and coriander.",
     ingredients: [
       { ingredient: "Grilled Paneer Cubes", measure: "200g" },
@@ -1000,7 +1016,7 @@ export const INDIAN_MEALS = [
     dietType: "veg",
     isVeg: true,
     strArea: "Tamil Nadu",
-    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/Panir_Tikka_Indian_cheese_grilled.jpg/960px-Panir_Tikka_Indian_cheese_grilled.jpg",
+    strMealThumb: paneer65Img,
     strInstructions: "Golden crispy cottage cheese cubes seasoned with South Indian spices, tossed with yogurt, curry leaves, and split green chilies.",
     ingredients: [
       { ingredient: "Fresh Paneer Cubes", measure: "200g" },
@@ -1032,7 +1048,7 @@ export const INDIAN_MEALS = [
     dietType: "veg",
     isVeg: true,
     strArea: "Tamil Nadu",
-    strMealThumb: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80",
+    strMealThumb: mushroomPepperSukkaImg,
     strInstructions: "Plump button mushrooms pan-roasted with freshly cracked peppercorns, shallots, fennel seeds, and curry leaves.",
     ingredients: [
       { ingredient: "Button Mushrooms", measure: "200g" },
@@ -1128,7 +1144,7 @@ export const INDIAN_MEALS = [
     dietType: "veg",
     isVeg: true,
     strArea: "Tamil Nadu",
-    strMealThumb: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=800&q=80",
+    strMealThumb: vazhaipooVadaiImg,
     strInstructions: "Heirloom Tamil snack of finely minced banana blossoms mixed with spiced chana dal batter and deep-fried till golden crisp.",
     ingredients: [
       { ingredient: "Minced Banana Blossom (Vazhaipoo)", measure: "100g" },
@@ -1291,7 +1307,7 @@ export const INDIAN_MEALS = [
     dietType: "veg",
     isVeg: true,
     strArea: "North Indian",
-    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/ba/New_Punjab_Club_food_spread.jpg/960px-New_Punjab_Club_food_spread.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    strMealThumb: butterNaanImg,
     strInstructions: "Soft pillowy tandoori naan straight out of clay oven, basted generously with butter.",
     ingredients: [
       { ingredient: "Tandoori Leavened Naan", measure: "2 pcs" },
@@ -1373,7 +1389,7 @@ export const INDIAN_MEALS = [
     dietType: "veg",
     isVeg: true,
     strArea: "Tamil Nadu",
-    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5b/Sohan_Halwa_at_Ghantewala_in_Chandni_Chowk%2C_Delhi.jpg/960px-Sohan_Halwa_at_Ghantewala_in_Chandni_Chowk%2C_Delhi.jpg",
+    strMealThumb: tirunelveliHalwaImg,
     strInstructions: "Legendary dark brown wheat halwa made from fermented whole wheat milk, slow-stirred with pure desi ghee and caramelized palm sugar, loaded with fried cashews.",
     ingredients: [
       { ingredient: "Fermented Wheat Milk", measure: "150g" },
@@ -1566,7 +1582,7 @@ export const INDIAN_MEALS = [
     dietType: "veg",
     isVeg: true,
     strArea: "North Indian",
-    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1d/Fried_Bread_Pieces_For_Shahi_Tukray_%28Shahi_Tukda%29.JPG/960px-Fried_Bread_Pieces_For_Shahi_Tukray_%28Shahi_Tukda%29.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    strMealThumb: shahiTukdaImg,
     strInstructions: "Crispy ghee-fried bread triangles soaked in fragrant sugar syrup, coated in rich saffron rabdi, and garnished with chopped nuts.",
     ingredients: [
       { ingredient: "Crisp Ghee-Fried Bread", measure: "2 triangles" },
@@ -1651,7 +1667,7 @@ export const INDIAN_MEALS = [
     dietType: "veg",
     isVeg: true,
     strArea: "Tamil Nadu",
-    strMealThumb: "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=800&q=80",
+    strMealThumb: neerMorImg,
     strInstructions: "Wholesome probiotic churned curd thinned with water, tempered with mustard seeds, ginger, green chilies, curry leaves, and a pinch of asafoetida (hing).",
     ingredients: [
       { ingredient: "Fresh Churned Curd", measure: "200ml" },
@@ -1683,7 +1699,7 @@ export const INDIAN_MEALS = [
     dietType: "veg",
     isVeg: true,
     strArea: "Indian",
-    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/Pakora_with_sauce%2C_Mango_Lassi_for_drink%2C_Portland_Indian_Festival.jpg/960px-Pakora_with_sauce%2C_Mango_Lassi_for_drink%2C_Portland_Indian_Festival.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    strMealThumb: mangoLassiImg,
     strInstructions: "Thick luscious blend of ripe Alphonso mango pulp, fresh whole-milk yogurt, cardamom, and a hint of saffron.",
     ingredients: [
       { ingredient: "Alphonso Mango Pulp", measure: "1/2 cup" },
@@ -1763,7 +1779,7 @@ export const INDIAN_MEALS = [
     dietType: "non-veg",
     isVeg: false,
     strArea: "Tamil Nadu",
-    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/Rasam.JPG/960px-Rasam.JPG",
+    strMealThumb: nattuKozhiSoupImg,
     strInstructions: "Hot and spicy country chicken clear soup infused with crushed black pepper, cumin, coriander seeds, shallots, and turmeric.",
     ingredients: [
       { ingredient: "Country Chicken Bone Broth", measure: "250ml" },
@@ -1779,7 +1795,7 @@ export const INDIAN_MEALS = [
     dietType: "non-veg",
     isVeg: false,
     strArea: "Tamil Nadu",
-    strMealThumb: "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Shorpo_cooking_in_Kazan.jpg/960px-Shorpo_cooking_in_Kazan.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    strMealThumb: aattukkalSoupImg,
     strInstructions: "Traditional slow-boiled lamb trotters bone marrow soup infused with black pepper, garlic, shallots, and fresh herbs.",
     ingredients: [
       { ingredient: "Slow-Simmered Lamb Bone Broth", measure: "250ml" },

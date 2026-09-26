@@ -71,11 +71,11 @@ const SearchResults = () => {
               <span>Results for "{query}"</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
-              Dishes matching your culinary search
+              Recipes matching your culinary search
             </p>
           </div>
           <span className="text-xs font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-100 px-4 py-1.5 rounded-full w-fit">
-            {meals.length} {meals.length === 1 ? "dish found" : "dishes found"}
+            {meals.length} {meals.length === 1 ? "recipe found" : "recipes found"}
           </span>
         </div>
       </div>
@@ -85,15 +85,15 @@ const SearchResults = () => {
           <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-4 text-slate-400">
             <UtensilsCrossed className="w-8 h-8 stroke-[1.8]" />
           </div>
-          <h3 className="text-xl font-black text-slate-800 mb-2">No meals found matching "{query}"</h3>
+          <h3 className="text-xl font-black text-slate-800 mb-2">No recipes found matching "{query}"</h3>
           <p className="text-slate-500 text-sm mb-6 max-w-sm mx-auto leading-relaxed">
-            Try searching for delicious classics like Biryani, Dosa, Parotta, or Butter Chicken.
+            Try searching for delicious classics like Biryani, Dosa, Parotta, Butter Chicken, or Pasta.
           </p>
           <Link
             to="/"
             className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider px-6 py-3.5 rounded-xl transition shadow-lg shadow-emerald-600/30"
           >
-            <span>Explore All Menus</span>
+            <span>Explore All Recipes</span>
           </Link>
         </div>
       ) : (

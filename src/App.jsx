@@ -4,95 +4,45 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import SplashScreen from "./components/SplashScreen";
 import Home from "./pages/Home";
+import Categories from "./pages/Categories";
 import CategoryMeals from "./pages/CategoryMeals";
+import CuisineExplorer from "./pages/CuisineExplorer";
 import MealDetails from "./pages/MealDetails";
 import Favorite from "./pages/Favorite";
 import SearchResults from "./pages/SearchResults";
-import CartPage from "./pages/CartPage";
-import OrderTracking from "./pages/OrderTracking";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Profile from "./pages/Profile";
-import OrderHistory from "./pages/OrderHistory";
-import ProtectedRoute from "./components/ProtectedRoute";
-import { AuthProvider } from "./contexts/AuthContext";
-import { AddressProvider } from "./contexts/AddressContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
-import { CartProvider } from "./contexts/CartContext";
-import { CurrencyProvider } from "./contexts/CurrencyContext";
 
 const AppContent = () => {
   return (
-    <div className="min-h-screen bg-gray-50/50 flex flex-col">
+    <div className="min-h-screen bg-slate-50/50 flex flex-col text-slate-900">
       <Header />
       <main className="flex-1">
         <Routes>
           {/* Public Browsing Routes */}
           <Route path="/" element={<Home />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/category" element={<Navigate to="/categories" replace />} />
           <Route path="/category/:category" element={<CategoryMeals />} />
+          <Route path="/cuisines" element={<CuisineExplorer />} />
+          <Route path="/cuisine/:area" element={<CuisineExplorer />} />
+          <Route path="/area/:area" element={<CuisineExplorer />} />
           <Route path="/meal/:id" element={<MealDetails />} />
           <Route path="/favorites" element={<Favorite />} />
           <Route path="/favorite" element={<Favorite />} />
           <Route path="/search" element={<SearchResults />} />
 
-          {/* Auth Pages */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-
-          {/* Redirect removed admin routes */}
-          <Route path="/admin-login" element={<Navigate to="/login" replace />} />
+          {/* Clean Redirects for removed login, auth, profile & legacy routes */}
+          <Route path="/login" element={<Navigate to="/" replace />} />
+          <Route path="/register" element={<Navigate to="/" replace />} />
+          <Route path="/profile" element={<Navigate to="/favorites" replace />} />
+          <Route path="/cart" element={<Navigate to="/favorites" replace />} />
+          <Route path="/order-tracking" element={<Navigate to="/" replace />} />
+          <Route path="/order-tracking/*" element={<Navigate to="/" replace />} />
+          <Route path="/order-history" element={<Navigate to="/favorites" replace />} />
+          <Route path="/orders" element={<Navigate to="/favorites" replace />} />
+          <Route path="/admin-login" element={<Navigate to="/" replace />} />
           <Route path="/admin" element={<Navigate to="/" replace />} />
           <Route path="/admin/*" element={<Navigate to="/" replace />} />
-
-          {/* Protected Routes (Require Authentication) */}
-          <Route
-            path="/cart"
-            element={
-              <ProtectedRoute>
-                <CartPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/order-tracking"
-            element={
-              <ProtectedRoute>
-                <OrderTracking />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/order-tracking/:orderId"
-            element={
-              <ProtectedRoute>
-                <OrderTracking />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/order-history"
-            element={
-              <ProtectedRoute>
-                <OrderHistory />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/orders"
-            element={
-              <ProtectedRoute>
-                <OrderHistory />
-              </ProtectedRoute>
-            }
-          />
 
           {/* 404 Fallback */}
           <Route
@@ -100,12 +50,12 @@ const AppContent = () => {
             element={
               <div className="max-w-md mx-auto my-24 text-center px-4">
                 <h1 className="text-6xl font-black text-emerald-800 mb-4">404</h1>
-                <p className="text-gray-600 mb-6">Oops! The page you requested could not be found.</p>
+                <p className="text-slate-600 mb-6">Oops! The recipe or page you requested could not be found.</p>
                 <a
                   href="/"
                   className="inline-block bg-emerald-600 text-white font-bold px-6 py-2.5 rounded-xl hover:bg-emerald-700 transition"
                 >
-                  Back to Home
+                  Back to All Recipes
                 </a>
               </div>
             }
@@ -118,29 +68,20 @@ const AppContent = () => {
 };
 
 const App = () => {
-  // Always show the splash screen for 10 seconds on page load/refresh
   const [showSplash, setShowSplash] = useState(true);
 
   return (
     <>
       {showSplash && (
-        <SplashScreen onFinish={() => setShowSplash(false)} duration={10000} />
+        <SplashScreen onFinish={() => setShowSplash(false)} duration={2500} />
       )}
       <BrowserRouter>
-        <AuthProvider>
-          <CurrencyProvider>
-            <AddressProvider>
-              <FavoritesProvider>
-                <CartProvider>
-                  <AppContent />
-                </CartProvider>
-              </FavoritesProvider>
-            </AddressProvider>
-          </CurrencyProvider>
-        </AuthProvider>
+        <FavoritesProvider>
+          <AppContent />
+        </FavoritesProvider>
       </BrowserRouter>
     </>
   );
 };
 
-export default App; 
+export default App;

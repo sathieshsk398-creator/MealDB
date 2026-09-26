@@ -64,14 +64,14 @@ const CategoryMeals = () => {
               <span>Category Selection</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black capitalize text-slate-900 tracking-tight">
-              {category} Menu
+              {category} Recipes
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Authentic and chef-crafted {category} selections delivered hot to your doorstep
+              Authentic and chef-tested {category} recipes with step-by-step methods and exact ingredients
             </p>
           </div>
           <span className="text-xs font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-100 px-4 py-1.5 rounded-full w-fit">
-            {meals.length} {meals.length === 1 ? "dish" : "dishes"} available
+            {meals.length} {meals.length === 1 ? "recipe" : "recipes"} available
           </span>
         </div>
       </div>
